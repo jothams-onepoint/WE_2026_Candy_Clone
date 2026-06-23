@@ -7,9 +7,75 @@
   <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
-  <div id="app">
+  <!-- Main Menu -->
+  <div id="main-menu">
+    <img id="menu-settings" src="assets/menu elements/settings.png" alt="Settings">
+    <img id="menu-play" src="assets/menu elements/play_button.png" alt="Play">
+    <div id="menu-bottom-bar">
+      <img class="menu-bottom-icon" src="assets/menu elements/quests.png" alt="Quests">
+      <img class="menu-bottom-icon" src="assets/menu elements/Home.png" alt="Home">
+      <img class="menu-bottom-icon" src="assets/menu elements/shop.png" alt="Shop">
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
     <div id="game-grid"></div>
   </div>
+
+  <!-- Win Screen -->
+  <div id="win-screen" class="hidden">
+    <div class="es-bloom">
+      <div class="es-ring win-ring"></div>
+      <div class="es-ring win-ring win-ring-2"></div>
+      <div class="es-particles">
+        <div class="win-seed"></div>
+        <div class="win-seed"></div>
+        <div class="win-seed"></div>
+        <div class="win-seed"></div>
+        <div class="win-seed"></div>
+        <div class="win-seed"></div>
+      </div>
+    </div>
+    <div class="es-card win-card">
+      <p class="es-eyebrow win-eyebrow">Level complete</p>
+      <h1 class="es-headline">You Win.</h1>
+      <div class="es-rule">
+        <div class="es-rule-line"></div>
+        <div class="es-rule-dot win-dot"></div>
+        <div class="es-rule-line"></div>
+      </div>
+      <p class="es-score-label">Score</p>
+      <p class="es-score-value" id="win-score">0</p>
+    </div>
+  </div>
+
+  <!-- Loss Screen -->
+  <div id="loss-screen" class="hidden">
+    <div class="es-bloom">
+      <div class="es-ring loss-ring"></div>
+      <div class="es-ring loss-ring loss-ring-2"></div>
+      <div class="es-particles">
+        <div class="loss-frag"></div>
+        <div class="loss-frag"></div>
+        <div class="loss-frag"></div>
+        <div class="loss-frag"></div>
+        <div class="loss-frag"></div>
+        <div class="loss-frag"></div>
+      </div>
+    </div>
+    <div class="es-card loss-card">
+      <p class="es-eyebrow loss-eyebrow">No moves left</p>
+      <h1 class="es-headline">You Lost.</h1>
+      <div class="es-rule">
+        <div class="es-rule-line"></div>
+        <div class="es-rule-dot loss-dot"></div>
+        <div class="es-rule-line"></div>
+      </div>
+      <p class="es-score-label">Score</p>
+      <p class="es-score-value" id="loss-score">0</p>
+    </div>
+  </div>
+
   <script type="module" src="dist/game.js"></script>
 </body>
 </html>

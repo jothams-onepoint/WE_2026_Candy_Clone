@@ -8,6 +8,7 @@ const GRID_SIZE = 8;
 let gameGrid: IconName[][] = [];
 let goldGrid: boolean[][] = [];
 let gameIconSet: IconSet;
+let points = 0;
 
 const whooshSound = new Audio('Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('Sounds/invalidswap.mp3');
@@ -176,6 +177,22 @@ function handleDragEnd(endX: number, endY: number): void {
   }
 
   dragStartCell = null;
+}
+
+function showWinScreen(): void {
+  const screen = document.getElementById('win-screen');
+  const scoreEl = document.getElementById('win-score');
+  if (!screen || !scoreEl) return;
+  scoreEl.textContent = String(points);
+  screen.classList.remove('hidden');
+}
+
+function showLossScreen(): void {
+  const screen = document.getElementById('loss-screen');
+  const scoreEl = document.getElementById('loss-score');
+  if (!screen || !scoreEl) return;
+  scoreEl.textContent = String(points);
+  screen.classList.remove('hidden');
 }
 
 function setupDragHandlers(): void {
