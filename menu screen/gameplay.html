@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candy Clone – Gameplay</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Fredoka', 'Comic Sans MS', sans-serif;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    #gameplay-screen {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    .gameplay-content {
+      position: relative;
+      width: min(100vw, 56.25vh);
+      height: min(100vh, 177.78vw);
+      background: linear-gradient(135deg, #1e5a2c 0%, #2d7a3e 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      overflow: hidden;
+    }
+
+    .float-item {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.6;
+      z-index: 1;
+    }
+
+    .float-item.butterfly { animation: flutter 3s infinite ease-in-out; }
+    .float-item.sparkle { animation: sparkle-float 4s infinite ease-in-out; }
+
+    .float-item.butterfly::before { content: '🦋'; font-size: 30px; }
+    .float-item.sparkle::before { content: '✨'; font-size: 20px; animation: twinkle 1s infinite; }
+
+    @keyframes flutter {
+      0%, 100% { transform: translateX(0) translateY(0) rotateZ(0deg); }
+      25% { transform: translateX(15px) translateY(-20px) rotateZ(10deg); }
+      50% { transform: translateX(0) translateY(0) rotateZ(0deg); }
+      75% { transform: translateX(-15px) translateY(-20px) rotateZ(-10deg); }
+    }
+
+    @keyframes sparkle-float {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      25% { transform: translateX(10px) translateY(-10px); }
+      50% { transform: translateX(0) translateY(0); }
+      75% { transform: translateX(-10px) translateY(-10px); }
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 32px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .gameplay-placeholder {
+      color: #fff;
+      font-size: 14px;
+      text-align: center;
+      max-width: 80%;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .back-button {
+      padding: 12px 24px;
+      margin-top: 16px;
+      background: #1e5a8a;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .back-button:hover {
+      background: #155080;
+    }
+
+    .back-button:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <div id="gameplay-screen">
+    <div class="gameplay-content">
+      <div class="float-item butterfly" style="top: 20%; left: 15%;"></div>
+      <div class="float-item sparkle" style="top: 60%; right: 20%;"></div>
+      <div class="float-item butterfly" style="top: 50%; right: 10%; animation-delay: 2s;"></div>
+
+      <h1>GAMEPLAY</h1>
+      <div class="gameplay-placeholder">
+        <p>PLACEHOLDER THING 1</p>
+        <p style="margin-top: 12px;">PLACEHOLDER THING 2</p>
+      </div>
+      <button class="back-button" onclick="playClick()">BACK</button>
+    </div>
+  </div>
+  <script>
+    const clickSound = new Audio('../assets/Sounds/pop.mp3');
+    function playClick() {
+      clickSound.currentTime = 0;
+      clickSound.play().catch(() => {});
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

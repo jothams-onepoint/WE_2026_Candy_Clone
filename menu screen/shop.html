@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candy Clone – Shop</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Fredoka', 'Comic Sans MS', sans-serif;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+
+    #shop-screen {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    .shop-content {
+      position: relative;
+      width: min(100vw, 56.25vh);
+      height: min(100vh, 177.78vw);
+      background: linear-gradient(to bottom, #d4a574 0%, #c9985f 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px;
+    }
+
+    .float-item {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.6;
+      z-index: 1;
+    }
+
+    .float-item.bee { animation: bee-buzz 4s infinite ease-in-out; }
+    .float-item.sparkle { animation: sparkle-float 4s infinite ease-in-out; }
+
+    .float-item.bee::before { content: '🐝'; font-size: 28px; }
+    .float-item.sparkle::before { content: '✨'; font-size: 18px; animation: twinkle 1s infinite; }
+
+    @keyframes bee-buzz {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      33% { transform: translateX(20px) translateY(-15px); }
+      66% { transform: translateX(-20px) translateY(15px); }
+    }
+
+    @keyframes sparkle-float {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      25% { transform: translateX(10px) translateY(-10px); }
+      50% { transform: translateX(0) translateY(0); }
+      75% { transform: translateX(-10px) translateY(-10px); }
+    }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 28px;
+      text-align: center;
+      font-weight: 700;
+      margin: 12px 0;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .shop-items {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      width: 100%;
+      padding: 0 8px;
+    }
+
+    .shelf {
+      background: linear-gradient(to bottom, #8b6f47 0%, #7a5f3f 100%);
+      border: 2px solid #5a4a2a;
+      border-radius: 2px;
+      padding: 12px 8px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 0 rgba(0, 0, 0, 0.3);
+      min-height: 80px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .shop-item {
+      background: #fff;
+      border: 3px solid #333;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      flex: 0 0 calc(50% - 4px);
+      min-width: 70px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s;
+    }
+
+    .shop-item:hover {
+      transform: translateY(-4px) scale(1.05);
+    }
+
+    .shop-item h3 {
+      color: #333;
+      margin-bottom: 4px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .shop-item p {
+      color: #666;
+      font-size: 11px;
+      margin-bottom: 6px;
+      font-style: italic;
+    }
+
+    .shop-item button {
+      background: linear-gradient(135deg, #2d7a3e 0%, #1e5a2c 100%);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 11px;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .shop-item button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .shop-item button:active {
+      transform: translateY(0);
+    }
+
+    .back-button {
+      padding: 12px 24px;
+      margin-top: 16px;
+      margin-bottom: 8px;
+      background: #1e5a8a;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .back-button:hover {
+      background: #155080;
+    }
+
+    .back-button:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+  <div id="shop-screen">
+    <div class="shop-content">
+      <div class="float-item bee" style="top: 10%; left: 15%;"></div>
+      <div class="float-item bee" style="top: 50%; right: 10%; animation-delay: 1s;"></div>
+      <div class="float-item sparkle" style="top: 30%; right: 5%; animation-delay: 0.5s;"></div>
+
+      <h1>🛍️ SHOP</h1>
+
+      <div class="shop-items">
+        <div class="shelf">
+          <div class="shop-item" style="background: #ffe6cc;">
+            <h3>💎 THING 1</h3>
+            <p>Shiny!</p>
+            <button onclick="playClick(); alert('NOT AVAILABLE')">BUY</button>
+          </div>
+          <div class="shop-item" style="background: #ffcccc;">
+            <h3>⭐ THING 2</h3>
+            <p>Cool!</p>
+            <button onclick="playClick(); alert('NOT AVAILABLE')">BUY</button>
+          </div>
+        </div>
+        <div class="shelf">
+          <div class="shop-item" style="background: #ccf5ff;">
+            <h3>✨ THING 3</h3>
+            <p>Nice!</p>
+            <button onclick="playClick(); alert('NOT AVAILABLE')">BUY</button>
+          </div>
+          <div class="shop-item" style="background: #e6ccff;">
+            <h3>🌟 THING 4</h3>
+            <p>Epic!</p>
+            <button onclick="playClick(); alert('NOT AVAILABLE')">BUY</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="back-button" onclick="playClick()">BACK</button>
+    </div>
+  </div>
+  <script>
+    const clickSound = new Audio('../assets/Sounds/pop.mp3');
+    function playClick() {
+      clickSound.currentTime = 0;
+      clickSound.play().catch(() => {});
+      window.location.href = 'index.html';
+    }
+  </script>
+</body>
+</html>

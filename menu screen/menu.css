@@ -1,0 +1,325 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Fredoka', 'Comic Sans MS', sans-serif;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+#menu-screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.menu-content {
+  position: relative;
+  width: min(100vw, 56.25vh);
+  height: min(100vh, 177.78vw);
+  background: url('../assets/backgrounds/bg_lush_meadow.png') center / cover no-repeat;
+}
+
+/* ── Shared button styles ── */
+
+.menu-btn {
+  cursor: pointer;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+  display: block;
+  transition: transform 0.1s ease;
+}
+
+.menu-btn.pressed {
+  transform: scale(0.88);
+}
+
+/* ── Settings – top-right ── */
+
+#btn-settings {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+/* ── Play – centred ── */
+
+#play-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#btn-play {
+  width: clamp(300px, 90%, 600px);
+  height: auto;
+}
+
+/* ── Side buttons – Quests · Home · Shop (all left) ── */
+
+.icon-btn {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+#btn-quests {
+  left: 16px;
+  top: 60px;
+}
+
+#btn-home {
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#btn-shop {
+  left: 16px;
+  bottom: 60px;
+}
+
+/* ── Floating elements ── */
+
+.float-item {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.7;
+  z-index: 1;
+}
+
+.float-item.cloud {
+  width: 80px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 40px;
+  box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.1);
+  animation: float-cloud 18s infinite ease-in-out;
+}
+
+.float-item.cloud::before,
+.float-item.cloud::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+}
+
+.float-item.cloud::before {
+  width: 50px;
+  height: 50px;
+  top: -25px;
+  left: 10px;
+}
+
+.float-item.cloud::after {
+  width: 40px;
+  height: 40px;
+  top: -20px;
+  right: 10px;
+}
+
+.float-item.butterfly {
+  width: 40px;
+  height: 40px;
+  animation: flutter 3s infinite ease-in-out;
+}
+
+.float-item.butterfly::before {
+  content: '🦋';
+  font-size: 30px;
+  display: block;
+}
+
+.float-item.sparkle {
+  width: 20px;
+  height: 20px;
+  animation: sparkle-float 4s infinite ease-in-out;
+}
+
+.float-item.sparkle::before {
+  content: '✨';
+  font-size: 20px;
+  display: block;
+  animation: twinkle 1s infinite;
+}
+
+@keyframes float-cloud {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(40px) translateY(-10px); }
+}
+
+@keyframes flutter {
+  0%, 100% { transform: translateX(0) translateY(0) rotateZ(0deg); }
+  25% { transform: translateX(15px) translateY(-20px) rotateZ(10deg); }
+  50% { transform: translateX(0) translateY(0) rotateZ(0deg); }
+  75% { transform: translateX(-15px) translateY(-20px) rotateZ(-10deg); }
+}
+
+@keyframes sparkle-float {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(10px) translateY(-10px); }
+  50% { transform: translateX(0) translateY(0); }
+  75% { transform: translateX(-10px) translateY(-10px); }
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* ── Popups ── */
+
+.popup {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+}
+
+.popup.visible {
+  display: flex;
+}
+
+.popup-content {
+  background: #fef9f0;
+  border: 4px solid #2d7a3e;
+  border-radius: 12px;
+  padding: 28px;
+  max-width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  position: relative;
+}
+
+.popup-content h2 {
+  color: #1a1a1a;
+  margin-bottom: 20px;
+  font-size: 28px;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.popup-body {
+  margin-bottom: 16px;
+  min-width: 280px;
+}
+
+.quest-item {
+  color: #333;
+  margin-bottom: 14px;
+  padding: 14px;
+  background: #fff;
+  border: 3px solid #2d7a3e;
+  border-radius: 8px;
+  position: relative;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s;
+}
+
+.quest-item:hover {
+  transform: translateY(-2px);
+}
+
+.quest-item h3 {
+  color: #1e5a2c;
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.quest-item p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.setting-item {
+  color: #333;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 3px solid #1e5a8a;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.setting-item label {
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+}
+
+.setting-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #2d7a3e;
+}
+
+.setting-item span {
+  color: #1e5a8a;
+}
+
+.popup-close {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #2d7a3e 0%, #1e5a2c 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 1px;
+  box-shadow: 0 4px 12px rgba(45, 122, 62, 0.3);
+}
+
+.popup-close:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(45, 122, 62, 0.4);
+}
+
+.popup-close:active {
+  transform: translateY(0);
+}
+
+/* Thumbtack for quests */
+#popup-quests .popup-content::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle at 30% 30%, #ff4444, #cc2222);
+  border-radius: 50%;
+  border: 2px solid #991111;
+  box-shadow: inset -2px -2px 3px rgba(0, 0, 0, 0.4), 0 3px 6px rgba(0, 0, 0, 0.4);
+}
