@@ -82,7 +82,8 @@ html, body {
 
 #btn-quests {
   left: 16px;
-  top: 60px;
+  top: 50%;
+  transform: translateY(-180px);
 }
 
 #btn-home {
@@ -93,16 +94,29 @@ html, body {
 
 #btn-shop {
   left: 16px;
-  bottom: 60px;
+  top: 50%;
+  transform: translateY(80px);
 }
 
 /* ── Floating elements ── */
 
 .float-item {
   position: absolute;
-  pointer-events: none;
   opacity: 0.7;
   z-index: 1;
+}
+
+.float-item:not(.draggable-item) {
+  pointer-events: none;
+}
+
+.draggable-item {
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.draggable-item:active {
+  cursor: grabbing;
 }
 
 .float-item.cloud {
@@ -167,22 +181,143 @@ html, body {
 }
 
 @keyframes flutter {
-  0%, 100% { transform: translateX(0) translateY(0) rotateZ(0deg); }
-  25% { transform: translateX(15px) translateY(-20px) rotateZ(10deg); }
-  50% { transform: translateX(0) translateY(0) rotateZ(0deg); }
-  75% { transform: translateX(-15px) translateY(-20px) rotateZ(-10deg); }
+  0% { transform: translateX(0) translateY(0) rotateZ(0deg) scale(1); }
+  12% { transform: translateX(22px) translateY(-28px) rotateZ(25deg) scale(1.05); }
+  25% { transform: translateX(15px) translateY(-20px) rotateZ(10deg) scale(0.95); }
+  38% { transform: translateX(35px) translateY(-35px) rotateZ(-15deg) scale(1.08); }
+  50% { transform: translateX(0) translateY(0) rotateZ(0deg) scale(1); }
+  62% { transform: translateX(-28px) translateY(-30px) rotateZ(-25deg) scale(1.06); }
+  75% { transform: translateX(-15px) translateY(-20px) rotateZ(-10deg) scale(0.96); }
+  88% { transform: translateX(-35px) translateY(-40px) rotateZ(20deg) scale(1.09); }
+  100% { transform: translateX(0) translateY(0) rotateZ(0deg) scale(1); }
 }
 
 @keyframes sparkle-float {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  25% { transform: translateX(10px) translateY(-10px); }
-  50% { transform: translateX(0) translateY(0); }
-  75% { transform: translateX(-10px) translateY(-10px); }
+  0% { transform: translateX(0) translateY(0) scale(1) rotateZ(0deg); }
+  15% { transform: translateX(18px) translateY(-15px) scale(1.2) rotateZ(45deg); }
+  30% { transform: translateX(10px) translateY(-25px) scale(0.8) rotateZ(90deg); }
+  45% { transform: translateX(25px) translateY(-10px) scale(1.1) rotateZ(180deg); }
+  60% { transform: translateX(-15px) translateY(-18px) scale(0.9) rotateZ(270deg); }
+  75% { transform: translateX(-8px) translateY(-20px) scale(1.15) rotateZ(315deg); }
+  100% { transform: translateX(0) translateY(0) scale(1) rotateZ(360deg); }
 }
 
 @keyframes twinkle {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 1; }
+}
+
+.float-item.bird {
+  animation: bird-fly 16s infinite ease-in-out;
+}
+
+.float-item.bird::before {
+  content: '🐦';
+  font-size: 28px;
+}
+
+.float-item.flower {
+  animation: flower-sway 5s infinite ease-in-out;
+}
+
+.float-item.flower::before {
+  content: '🌸';
+  font-size: 32px;
+}
+
+.float-item.star {
+  animation: star-twirl 6s infinite ease-in-out;
+}
+
+.float-item.star::before {
+  content: '⭐';
+  font-size: 24px;
+  animation: twinkle 1.5s infinite;
+}
+
+.float-item.leaf {
+  animation: leaf-fall 8s infinite ease-in;
+}
+
+.float-item.leaf::before {
+  content: '🍃';
+  font-size: 26px;
+}
+
+.float-item.bee {
+  animation: bee-buzz 4s infinite ease-in-out;
+}
+
+.float-item.bee::before {
+  content: '🐝';
+  font-size: 24px;
+}
+
+@keyframes bird-fly {
+  0% { transform: translateX(0) translateY(0) rotateZ(0deg) scaleX(1); }
+  15% { transform: translateX(35px) translateY(-30px) rotateZ(-10deg) scaleX(1); }
+  30% { transform: translateX(60px) translateY(-15px) rotateZ(0deg) scaleX(1); }
+  45% { transform: translateX(40px) translateY(25px) rotateZ(15deg) scaleX(-1); }
+  60% { transform: translateX(-40px) translateY(20px) rotateZ(10deg) scaleX(-1); }
+  75% { transform: translateX(-60px) translateY(-20px) rotateZ(-15deg) scaleX(-1); }
+  90% { transform: translateX(-30px) translateY(-40px) rotateZ(0deg) scaleX(1); }
+  100% { transform: translateX(0) translateY(0) rotateZ(0deg) scaleX(1); }
+}
+
+@keyframes flower-sway {
+  0% { transform: rotateZ(0deg) translateY(0) translateX(0) scale(1); }
+  20% { transform: rotateZ(12deg) translateY(-8px) translateX(5px) scale(1.05); }
+  40% { transform: rotateZ(8deg) translateY(-3px) translateX(2px) scale(0.95); }
+  60% { transform: rotateZ(-10deg) translateY(-6px) translateX(-4px) scale(1.08); }
+  80% { transform: rotateZ(-5deg) translateY(-2px) translateX(-1px) scale(0.97); }
+  100% { transform: rotateZ(0deg) translateY(0) translateX(0) scale(1); }
+}
+
+@keyframes star-twirl {
+  0% { transform: rotate(0deg) scale(1) translateY(0); }
+  20% { transform: rotate(90deg) scale(1.25) translateY(-8px); }
+  40% { transform: rotate(180deg) scale(0.85) translateY(0); }
+  60% { transform: rotate(270deg) scale(1.15) translateY(-12px); }
+  80% { transform: rotate(315deg) scale(0.9) translateY(-5px); }
+  100% { transform: rotate(360deg) scale(1) translateY(0); }
+}
+
+.float-item.leaf {
+  animation: leaf-fall 8s infinite ease-in;
+}
+
+.float-item.leaf::before {
+  content: '🍃';
+  font-size: 26px;
+}
+
+.float-item.bee {
+  animation: bee-buzz 4s infinite ease-in-out;
+}
+
+.float-item.bee::before {
+  content: '🐝';
+  font-size: 24px;
+}
+
+@keyframes leaf-fall {
+  0% { transform: translateY(0) translateX(0) rotateZ(0deg) scale(1); }
+  15% { transform: translateY(15px) translateX(15px) rotateZ(30deg) scale(1.05); }
+  30% { transform: translateY(30px) translateX(5px) rotateZ(-20deg) scale(0.95); }
+  45% { transform: translateY(50px) translateX(-10px) rotateZ(45deg) scale(1.08); }
+  60% { transform: translateY(65px) translateX(-18px) rotateZ(-35deg) scale(0.9); }
+  75% { transform: translateY(75px) translateX(8px) rotateZ(25deg) scale(1.02); }
+  100% { transform: translateY(90px) translateX(0) rotateZ(0deg) scale(1); }
+}
+
+@keyframes bee-buzz {
+  0% { transform: translateX(0) translateY(0) rotateZ(0deg) scaleY(1); }
+  15% { transform: translateX(25px) translateY(-10px) rotateZ(8deg) scaleY(0.95); }
+  30% { transform: translateX(15px) translateY(15px) rotateZ(-12deg) scaleY(1.05); }
+  45% { transform: translateX(-20px) translateY(5px) rotateZ(15deg) scaleY(0.9); }
+  60% { transform: translateX(-25px) translateY(-15px) rotateZ(-10deg) scaleY(1.08); }
+  75% { transform: translateX(10px) translateY(-20px) rotateZ(12deg) scaleY(0.98); }
+  100% { transform: translateX(0) translateY(0) rotateZ(0deg) scaleY(1); }
 }
 
 /* ── Popups ── */

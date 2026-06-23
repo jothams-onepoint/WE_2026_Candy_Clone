@@ -70,4 +70,43 @@ document.addEventListener('DOMContentLoaded', () => {
       if (popup) closePopup(popup.id);
     });
   });
+
+  // Make floating items draggable
+  let draggedItem = null;
+  let dragOffset = { x: 0, y: 0 };
+
+  document.querySelectorAll('.draggable-item').forEach(item => {
+    item.addEventListener('mousedown', (e) => {
+      draggedItem = item;
+      const rect = item.getBoundingClientRect();
+      dragOffset.x = e.clientX - rect.left;
+      dragOffset.y = e.clientY - rect.top;
+      item.style.animation = 'none';
+      item.style.cursor = 'grabbing';
+    });
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!draggedItem) return;
+    const menuContent = document.querySelector('.menu-content');
+    const rect = menuContent.getBoundingClientRect();
+    const x = e.clientX - rect.left - dragOffset.x;
+    const y = e.clientY - rect.top - dragOffset.y;
+    draggedItem.style.left = x + 'px';
+    draggedItem.style.top = y + 'px';
+    draggedItem.style.right = 'auto';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (draggedItem) {
+      draggedItem.style.cursor = 'grab';
+      const animationName = draggedItem.className.includes('bird') ? 'bird-fly' :
+                           draggedItem.className.includes('bee') ? 'bee-buzz' :
+                           draggedItem.className.includes('leaf') ? 'leaf-fall' :
+                           draggedItem.className.includes('star') ? 'star-twirl' :
+                           draggedItem.className.includes('sparkle') ? 'sparkle-float' : 'flutter';
+      draggedItem.style.animation = `${animationName} var(--animation-duration, 4s) infinite ease-in-out`;
+      draggedItem = null;
+    }
+  });
 });

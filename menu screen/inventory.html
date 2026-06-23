@@ -77,6 +77,45 @@
       50% { opacity: 1; }
     }
 
+    .float-item.bird { animation: bird-fly 16s infinite ease-in-out; }
+    .float-item.bird::before { content: '🐦'; font-size: 28px; }
+
+    .float-item.flower { animation: flower-sway 5s infinite ease-in-out; }
+    .float-item.flower::before { content: '🌸'; font-size: 32px; }
+
+    .float-item.star { animation: star-twirl 6s infinite ease-in-out; }
+    .float-item.star::before { content: '⭐'; font-size: 24px; animation: twinkle 1.5s infinite; }
+
+    @keyframes bird-fly {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      33% { transform: translateX(50px) translateY(-25px); }
+      66% { transform: translateX(-30px) translateY(15px); }
+    }
+
+    @keyframes flower-sway {
+      0%, 100% { transform: rotateZ(0deg) translateY(0); }
+      50% { transform: rotateZ(5deg) translateY(-5px); }
+    }
+
+    @keyframes star-twirl {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+    }
+
+    .float-item.leaf { animation: leaf-fall 8s infinite ease-in; }
+    .float-item.leaf::before { content: '🍃'; font-size: 26px; }
+
+    .float-item.bee { animation: bee-buzz 4s infinite ease-in-out; }
+    .float-item.bee::before { content: '🐝'; font-size: 24px; }
+
+    @keyframes leaf-fall {
+      0% { transform: translateY(0) translateX(0) rotateZ(0deg); }
+      25% { transform: translateY(20px) translateX(10px) rotateZ(15deg); }
+      50% { transform: translateY(40px) translateX(0) rotateZ(-15deg); }
+      75% { transform: translateY(60px) translateX(-10px) rotateZ(15deg); }
+      100% { transform: translateY(80px) translateX(0) rotateZ(0deg); }
+    }
+
     h1 {
       color: #fff;
       font-size: 28px;
@@ -153,9 +192,20 @@
 <body>
   <div id="inventory-screen">
     <div class="inventory-content">
-      <div class="float-item sparkle" style="top: 15%; left: 12%;"></div>
-      <div class="float-item butterfly" style="top: 40%; right: 8%; animation-delay: 1.5s;"></div>
-      <div class="float-item sparkle" style="top: 70%; left: 15%; animation-delay: 2s;"></div>
+      <div class="float-item sparkle draggable-item" style="top: 15%; right: 12%;"></div>
+      <div class="float-item sparkle draggable-item" style="top: 50%; right: 15%; animation-delay: 1s;"></div>
+      <div class="float-item sparkle draggable-item" style="top: 70%; right: 15%; animation-delay: 2s;"></div>
+
+      <div class="float-item star draggable-item" style="top: 20%; right: 20%; animation-delay: 0.5s;"></div>
+      <div class="float-item star draggable-item" style="top: 60%; right: 8%; animation-delay: 1.8s;"></div>
+
+      <div class="float-item bird draggable-item" style="top: 45%; right: 25%; animation-delay: 2.2s;"></div>
+
+      <div class="float-item leaf draggable-item" style="top: 30%; right: 18%; animation-delay: 1.2s;"></div>
+      <div class="float-item leaf draggable-item" style="top: 55%; right: 22%; animation-delay: 2.6s;"></div>
+
+      <div class="float-item bee draggable-item" style="top: 20%; right: 30%; animation-delay: 0.9s;"></div>
+      <div class="float-item bee draggable-item" style="top: 70%; right: 15%; animation-delay: 2.3s;"></div>
 
       <h1>🎒 INVENTORY</h1>
 
@@ -175,7 +225,7 @@
           <h3>THING 3</h3>
           <p>×8</p>
         </div>
-        <div class="inventory-item" style="background: linear-gradient(135deg, #e6ccff 0%, #d9aaff 100%);">
+        <div class="inventory-item" style="background: linear-gradient(135deg, #ccddff 0%, #aaccff 100%);">
           <div class="item-emoji">✨</div>
           <h3>THING 4</h3>
           <p>×3</p>
