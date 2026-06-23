@@ -12,6 +12,8 @@ let points = 0;
 let isAnimating = false;
 let moveCap = 0;
 let movesUsed = 0;
+let timeLeft = 40;
+let timerInterval: number | null = null;
 
 const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
@@ -101,6 +103,33 @@ function updateCellDOM(row: number, col: number): void {
 function updateScoreDisplay(): void {
   const el = document.getElementById('score-display');
   if (el) el.textContent = String(points);
+}
+
+function updateTimerDisplay(): void {
+  const el = document.getElementById('timer-display');
+  if (!el) return;
+  el.textContent = String(timeLeft);
+  el.classList.toggle('low', timeLeft <= 10);
+}
+
+function startTimer(): void {
+  if (timerInterval !== null) clearInterval(timerInterval);
+  timerInterval = window.setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval!);
+      timerInterval = null;
+      showLossScreen();
+    }
+  }, 1000);
+}
+
+function stopTimer(): void {
+  if (timerInterval !== null) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
 }
 
 function updateMovesDisplay(): void {
@@ -358,6 +387,8 @@ function showWinScreen(): void {
 }
 
 function showLossScreen(): void {
+  stopTimer();
+  isAnimating = true;
   const screen = document.getElementById('loss-screen');
   const scoreEl = document.getElementById('loss-score');
   if (!screen || !scoreEl) return;
@@ -413,6 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   moveCap = Math.floor(Math.random() * 11) + 15;
   movesUsed = 0;
+  timeLeft = 40;
   gameIconSet = pickIconSet();
   gameGrid = generateGrid();
   goldGrid = generateGoldGrid();
@@ -420,4 +452,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setupDragHandlers();
   updateScoreDisplay();
   updateMovesDisplay();
+  updateTimerDisplay();
+  startTimer();
 });
