@@ -7,6 +7,8 @@ let goldGrid = [];
 let gameIconSet;
 let points = 0;
 let isAnimating = false;
+let moveCap = 0;
+let movesUsed = 0;
 
 const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
@@ -94,6 +96,14 @@ function updateCellDOM(row, col) {
 function updateScoreDisplay() {
   const el = document.getElementById('score-display');
   if (el) el.textContent = String(points);
+}
+
+function updateMovesDisplay() {
+  const el = document.getElementById('moves-display');
+  if (!el) return;
+  const remaining = moveCap - movesUsed;
+  el.textContent = String(remaining);
+  el.classList.toggle('low', remaining <= 3);
 }
 
 function findAllMatchGroups() {
@@ -282,6 +292,13 @@ async function trySwap(r1, c1, r2, c2) {
     updateCellDOM(r2, c2);
     whooshSound.currentTime = 0;
     whooshSound.play().catch(() => {});
+    movesUsed++;
+    updateMovesDisplay();
+    if (movesUsed >= moveCap) {
+      await processMatches();
+      showLossScreen();
+      return;
+    }
     await processMatches();
     isAnimating = false;
   } else {
@@ -387,10 +404,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  moveCap = Math.floor(Math.random() * 11) + 15;
+  movesUsed = 0;
   gameIconSet = pickIconSet();
   gameGrid = generateGrid();
   goldGrid = generateGoldGrid();
   renderGrid();
   setupDragHandlers();
   updateScoreDisplay();
+  updateMovesDisplay();
 });

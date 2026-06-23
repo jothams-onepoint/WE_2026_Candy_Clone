@@ -10,6 +10,8 @@ let goldGrid: boolean[][] = [];
 let gameIconSet: IconSet;
 let points = 0;
 let isAnimating = false;
+let moveCap = 0;
+let movesUsed = 0;
 
 const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
@@ -99,6 +101,14 @@ function updateCellDOM(row: number, col: number): void {
 function updateScoreDisplay(): void {
   const el = document.getElementById('score-display');
   if (el) el.textContent = String(points);
+}
+
+function updateMovesDisplay(): void {
+  const el = document.getElementById('moves-display');
+  if (!el) return;
+  const remaining = moveCap - movesUsed;
+  el.textContent = String(remaining);
+  el.classList.toggle('low', remaining <= 3);
 }
 
 type MatchGroup = { cells: { row: number; col: number }[]; size: number };
@@ -289,6 +299,13 @@ async function trySwap(r1: number, c1: number, r2: number, c2: number): Promise<
     updateCellDOM(r2, c2);
     whooshSound.currentTime = 0;
     whooshSound.play().catch(() => {});
+    movesUsed++;
+    updateMovesDisplay();
+    if (movesUsed >= moveCap) {
+      await processMatches();
+      showLossScreen();
+      return;
+    }
     await processMatches();
     isAnimating = false;
   } else {
@@ -394,10 +411,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  moveCap = Math.floor(Math.random() * 11) + 15;
+  movesUsed = 0;
   gameIconSet = pickIconSet();
   gameGrid = generateGrid();
   goldGrid = generateGoldGrid();
   renderGrid();
   setupDragHandlers();
   updateScoreDisplay();
+  updateMovesDisplay();
 });
