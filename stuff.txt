@@ -1,0 +1,5 @@
+targets
+different shapes
+move limit
+time limit
+theme ??

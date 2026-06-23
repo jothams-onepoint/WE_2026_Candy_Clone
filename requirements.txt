@@ -1,0 +1,8 @@
+The goal is to create a Candy Crush clone.
+A level consists of a grid of colourful items.
+Players can swap any two adjacent items.
+When three items of the same colour are next to each other, they disappear and the items above fall into the empty spots. The user gets points.
+If more than three items line up or after falling, another set of items line up, a points multiplier is applied.
+The user has limited swaps.
+The level should be completable.
+Have a main menu / level selector
