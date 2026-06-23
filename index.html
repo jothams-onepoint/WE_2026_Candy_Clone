@@ -1,157 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Candy Clone</title>
-    <style>
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-
-        #menu {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background: url('assets/backgrounds/bg_lush_meadow.png') center center / cover no-repeat;
-        }
-
-        .nav-btn {
-            position: absolute;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .nav-btn img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            -webkit-user-drag: none;
-        }
-
-        /* Play — centered, wider aspect ratio (512×128 source) */
-        #btn-play {
-            width: 320px;
-            height: 80px;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        #btn-play.pressed img {
-            filter: brightness(0.8);
-        }
-
-        /* Quests — left edge, vertically centred */
-        #btn-quests {
-            width: 110px;
-            height: 110px;
-            left: 40px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        /* Home — bottom-left corner */
-        #btn-home {
-            width: 110px;
-            height: 110px;
-            left: 40px;
-            bottom: 40px;
-        }
-
-        /* Settings — right edge, vertically centred */
-        #btn-settings {
-            width: 110px;
-            height: 110px;
-            right: 40px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        /* Shop — bottom-right corner */
-        #btn-shop {
-            width: 110px;
-            height: 110px;
-            right: 40px;
-            bottom: 40px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candy Clone</title>
+  <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
-    <div id="menu">
-
-        <div class="nav-btn" id="btn-play">
-            <img src="assets/animations/menu animations/play_idle.png" alt="Play">
-        </div>
-
-        <div class="nav-btn" id="btn-home">
-            <img id="img-home"
-                 src="assets/animations/menu animations/home_idle.png"
-                 alt="Home">
-        </div>
-
-        <div class="nav-btn" id="btn-quests">
-            <img id="img-quests"
-                 src="assets/animations/menu animations/quests_idle.png"
-                 alt="Quests">
-        </div>
-
-        <div class="nav-btn" id="btn-settings">
-            <img id="img-settings"
-                 src="assets/animations/menu animations/settings_idle.png"
-                 alt="Settings">
-        </div>
-
-        <div class="nav-btn" id="btn-shop">
-            <img id="img-shop"
-                 src="assets/animations/menu animations/shop_idle.png"
-                 alt="Shop">
-        </div>
-
+  <!-- Main Menu -->
+  <div id="main-menu">
+    <img id="menu-settings" src="assets/menu elements/settings.png" alt="Settings">
+    <img id="menu-play" src="assets/menu elements/play_button.png" alt="Play">
+    <div id="menu-bottom-bar">
+      <img class="menu-bottom-icon" src="assets/menu elements/quests.png" alt="Quests">
+      <img class="menu-bottom-icon" src="assets/menu elements/Home.png" alt="Home">
+      <img class="menu-bottom-icon" src="assets/menu elements/shop.png" alt="Shop">
     </div>
+  </div>
 
-    <script>
-        const BASE = 'assets/animations/menu animations/';
+  <div id="app" class="hidden">
+    <div id="game-grid"></div>
+  </div>
 
-        const NAV_BUTTONS = [
-            { btnId: 'btn-home',     imgId: 'img-home',     idle: 'home_idle.png',     click: 'home_click.png'     },
-            { btnId: 'btn-quests',   imgId: 'img-quests',   idle: 'quests_idle.png',   click: 'quests_click.png'   },
-            { btnId: 'btn-settings', imgId: 'img-settings', idle: 'settings_idle.png', click: 'settings_click.png' },
-            { btnId: 'btn-shop',     imgId: 'img-shop',     idle: 'shop_idle.png',     click: 'shop_click.png'     },
-        ];
+  <!-- Win Screen -->
+  <div id="win-screen" class="hidden">
+    <div class="es-bloom">
+      <div class="es-ring win-ring"></div>
+      <div class="es-ring win-ring win-ring-2"></div>
+      <div class="es-particles">
+        <div class="win-seed"></div>
+        <div class="win-seed"></div>
+        <div class="win-seed"></div>
+        <div class="win-seed"></div>
+        <div class="win-seed"></div>
+        <div class="win-seed"></div>
+      </div>
+    </div>
+    <div class="es-card win-card">
+      <p class="es-eyebrow win-eyebrow">Level complete</p>
+      <h1 class="es-headline">You Win.</h1>
+      <div class="es-rule">
+        <div class="es-rule-line"></div>
+        <div class="es-rule-dot win-dot"></div>
+        <div class="es-rule-line"></div>
+      </div>
+      <p class="es-score-label">Score</p>
+      <p class="es-score-value" id="win-score">0</p>
+    </div>
+  </div>
 
-        NAV_BUTTONS.forEach(({ btnId, imgId, idle, click }) => {
-            const btn = document.getElementById(btnId);
-            const img = document.getElementById(imgId);
+  <!-- Loss Screen -->
+  <div id="loss-screen" class="hidden">
+    <div class="es-bloom">
+      <div class="es-ring loss-ring"></div>
+      <div class="es-ring loss-ring loss-ring-2"></div>
+      <div class="es-particles">
+        <div class="loss-frag"></div>
+        <div class="loss-frag"></div>
+        <div class="loss-frag"></div>
+        <div class="loss-frag"></div>
+        <div class="loss-frag"></div>
+        <div class="loss-frag"></div>
+      </div>
+    </div>
+    <div class="es-card loss-card">
+      <p class="es-eyebrow loss-eyebrow">No moves left</p>
+      <h1 class="es-headline">You Lost.</h1>
+      <div class="es-rule">
+        <div class="es-rule-line"></div>
+        <div class="es-rule-dot loss-dot"></div>
+        <div class="es-rule-line"></div>
+      </div>
+      <p class="es-score-label">Score</p>
+      <p class="es-score-value" id="loss-score">0</p>
+    </div>
+  </div>
 
-            const showClick = () => { img.src = BASE + click; };
-            const showIdle  = () => { img.src = BASE + idle;  };
-
-            btn.addEventListener('pointerdown', showClick);
-            btn.addEventListener('pointerup',   showIdle);
-            btn.addEventListener('pointerleave', showIdle);
-        });
-
-        // Play has no click.png — use a CSS class for visual feedback
-        const playBtn = document.getElementById('btn-play');
-
-        playBtn.addEventListener('pointerdown', () => playBtn.classList.add('pressed'));
-        playBtn.addEventListener('pointerup',   () => playBtn.classList.remove('pressed'));
-        playBtn.addEventListener('pointerleave', () => playBtn.classList.remove('pressed'));
-
-        playBtn.addEventListener('click', () => {
-            // TODO: transition to game screen
-            console.log('Play!');
-        });
-    </script>
+  <script type="module" src="dist/game.js"></script>
+</body>
+</html>
 </body>
 </html>
