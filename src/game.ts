@@ -2,6 +2,14 @@ type IconName = 'ant' | 'blue_flower' | 'grass' | 'potted_plant' | 'red_flower' 
 
 const ICONS: IconName[] = ['ant', 'blue_flower', 'grass', 'potted_plant', 'red_flower', 'shovel'];
 const ICON_SETS = ['tile_icons_red', 'Tile_icons_blue'] as const;
+const BACKGROUNDS = [
+  'assets/backgrounds/bg_autumn_garden.png',
+  'assets/backgrounds/bg_lush_meadow.png',
+  'assets/backgrounds/bg_morning_dew.png',
+  'assets/backgrounds/bg_shaded_grove.png',
+  'assets/backgrounds/bg_sunlit_garden.png',
+  'assets/backgrounds/bg_wildflower_patch.png',
+];
 type IconSet = typeof ICON_SETS[number];
 const GRID_SIZE = 8;
 
@@ -386,22 +394,35 @@ function showWinScreen(): void {
   screen.classList.remove('hidden');
 }
 
-function resetGame(): void {
-  stopTimer();
-  points = 0;
-  movesUsed = 0;
+function applyRandomBackground(): void {
+  const bg = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
+  document.body.style.backgroundImage = `url('${bg}')`;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+}
+
+function startGame(): void {
+  applyRandomBackground();
   moveCap = Math.floor(Math.random() * 11) + 15;
+  movesUsed = 0;
   timeLeft = 40;
   isAnimating = false;
   gameIconSet = pickIconSet();
   gameGrid = generateGrid();
   goldGrid = generateGoldGrid();
-  document.getElementById('loss-screen')!.classList.add('hidden');
   renderGrid();
+  setupDragHandlers();
   updateScoreDisplay();
   updateMovesDisplay();
   updateTimerDisplay();
   startTimer();
+}
+
+function resetGame(): void {
+  stopTimer();
+  points = 0;
+  document.getElementById('loss-screen')!.classList.add('hidden');
+  startGame();
 }
 
 function showLossScreen(): void {
@@ -452,26 +473,11 @@ function setupDragHandlers(): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const playBtn = document.getElementById('menu-play');
-  if (playBtn) {
-    playBtn.addEventListener('click', () => {
-      document.getElementById('main-menu')?.classList.add('hidden');
-      document.getElementById('app')?.classList.remove('hidden');
-    });
-  }
+  document.getElementById('menu-play')?.addEventListener('click', () => {
+    document.getElementById('main-menu')?.classList.add('hidden');
+    document.getElementById('app')?.classList.remove('hidden');
+    startGame();
+  });
 
   document.getElementById('retry-btn')?.addEventListener('click', resetGame);
-
-  moveCap = Math.floor(Math.random() * 11) + 15;
-  movesUsed = 0;
-  timeLeft = 40;
-  gameIconSet = pickIconSet();
-  gameGrid = generateGrid();
-  goldGrid = generateGoldGrid();
-  renderGrid();
-  setupDragHandlers();
-  updateScoreDisplay();
-  updateMovesDisplay();
-  updateTimerDisplay();
-  startTimer();
 });
