@@ -6,9 +6,12 @@ let gameGrid = [];
 let goldGrid = [];
 let gameIconSet;
 let points = 0;
+let isAnimating = false;
 
-const whooshSound = new Audio('Sounds/whoosh.mp3');
-const invalidSwapSound = new Audio('Sounds/invalidswap.mp3');
+const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
+const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
+const crunchSound = new Audio('assets/Sounds/crunch.mp3');
+const chimeSound = new Audio('assets/Sounds/chime.mp3');
 
 let dragStartCell = null;
 let dragStartX = 0;
@@ -20,23 +23,19 @@ function pickIconSet() {
 
 function generateGrid() {
   const grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(null));
-
   for (let row = 0; row < GRID_SIZE; row++) {
     for (let col = 0; col < GRID_SIZE; col++) {
       const blocked = new Set();
-
       if (col >= 2 && grid[row][col - 1] !== null && grid[row][col - 1] === grid[row][col - 2]) {
         blocked.add(grid[row][col - 1]);
       }
       if (row >= 2 && grid[row - 1][col] !== null && grid[row - 1][col] === grid[row - 2][col]) {
         blocked.add(grid[row - 1][col]);
       }
-
       const valid = ICONS.filter(icon => !blocked.has(icon));
       grid[row][col] = valid[Math.floor(Math.random() * valid.length)];
     }
   }
-
   return grid;
 }
 
@@ -46,13 +45,13 @@ function generateGoldGrid() {
   );
 }
 
-function renderGrid() {
+function renderGrid(newCells) {
   const container = document.getElementById('game-grid');
   if (!container) return;
   container.innerHTML = '';
-
   for (let row = 0; row < GRID_SIZE; row++) {
     for (let col = 0; col < GRID_SIZE; col++) {
+      const icon = gameGrid[row][col];
       const isGold = goldGrid[row][col];
       const cellSet = isGold ? 'Tile_icons_gold' : gameIconSet;
 
@@ -60,12 +59,13 @@ function renderGrid() {
       cell.className = 'grid-cell';
       cell.dataset.row = String(row);
       cell.dataset.col = String(col);
-      cell.dataset.icon = gameGrid[row][col];
+      cell.dataset.icon = icon;
       if (isGold) cell.dataset.gold = 'true';
+      if (newCells && newCells.has(`${row},${col}`)) cell.classList.add('tile-new');
 
       const img = document.createElement('img');
-      img.src = `assets/tile icons/${cellSet}/${gameGrid[row][col]}.png`;
-      img.alt = gameGrid[row][col];
+      img.src = `assets/tile icons/${cellSet}/${icon}.png`;
+      img.alt = icon;
       img.draggable = false;
 
       cell.appendChild(img);
@@ -81,17 +81,55 @@ function getCellElement(row, col) {
 function updateCellDOM(row, col) {
   const cell = getCellElement(row, col);
   if (!cell) return;
+  const icon = gameGrid[row][col];
   const isGold = goldGrid[row][col];
   const cellSet = isGold ? 'Tile_icons_gold' : gameIconSet;
   const img = cell.querySelector('img');
-  img.src = `assets/tile icons/${cellSet}/${gameGrid[row][col]}.png`;
-  img.alt = gameGrid[row][col];
-  cell.dataset.icon = gameGrid[row][col];
-  if (isGold) {
-    cell.dataset.gold = 'true';
-  } else {
-    delete cell.dataset.gold;
+  img.src = `assets/tile icons/${cellSet}/${icon}.png`;
+  img.alt = icon;
+  cell.dataset.icon = icon;
+  if (isGold) cell.dataset.gold = 'true'; else delete cell.dataset.gold;
+}
+
+function updateScoreDisplay() {
+  const el = document.getElementById('score-display');
+  if (el) el.textContent = String(points);
+}
+
+function findAllMatchGroups() {
+  const groups = [];
+
+  for (let row = 0; row < GRID_SIZE; row++) {
+    let col = 0;
+    while (col < GRID_SIZE) {
+      const icon = gameGrid[row][col];
+      let len = 1;
+      while (col + len < GRID_SIZE && gameGrid[row][col + len] === icon) len++;
+      if (len >= 3) {
+        const cells = [];
+        for (let i = 0; i < len; i++) cells.push({ row, col: col + i });
+        groups.push({ cells, size: len });
+      }
+      col += len;
+    }
   }
+
+  for (let col = 0; col < GRID_SIZE; col++) {
+    let row = 0;
+    while (row < GRID_SIZE) {
+      const icon = gameGrid[row][col];
+      let len = 1;
+      while (row + len < GRID_SIZE && gameGrid[row + len][col] === icon) len++;
+      if (len >= 3) {
+        const cells = [];
+        for (let i = 0; i < len; i++) cells.push({ row: row + i, col });
+        groups.push({ cells, size: len });
+      }
+      row += len;
+    }
+  }
+
+  return groups;
 }
 
 function hasMatchAt(row, col) {
@@ -108,31 +146,145 @@ function hasMatchAt(row, col) {
   return vCount >= 3;
 }
 
+function getAnimDir() {
+  return gameIconSet === 'tile_icons_red' ? 'red' : 'blue';
+}
+
+function showBreakAnimation(row, col) {
+  const cell = getCellElement(row, col);
+  if (!cell) return;
+  const icon = gameGrid[row][col];
+  const isGold = goldGrid[row][col];
+  const animDir = isGold ? 'gold' : getAnimDir();
+  const img = cell.querySelector('img');
+  if (img) {
+    img.src = `assets/animations/tile icons animations/${animDir}/${icon}_break_anim.png`;
+  }
+  cell.classList.add('breaking');
+}
+
+function showScoreFlash(cells, amount) {
+  let sumX = 0, sumY = 0, count = 0;
+  cells.forEach(({ row, col }) => {
+    const el = getCellElement(row, col);
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    sumX += rect.left + rect.width / 2;
+    sumY += rect.top + rect.height / 2;
+    count++;
+  });
+  if (count === 0) return;
+
+  const flash = document.createElement('div');
+  flash.className = 'score-flash';
+  flash.textContent = `+${amount}`;
+  flash.style.left = `${sumX / count}px`;
+  flash.style.top = `${sumY / count}px`;
+  document.body.appendChild(flash);
+  setTimeout(() => flash.remove(), 900);
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function processMatches(depth = 0) {
+  if (depth > 20) return;
+
+  const groups = findAllMatchGroups();
+  if (groups.length === 0) return;
+
+  const matchedSet = new Set();
+  groups.forEach(g => g.cells.forEach(c => matchedSet.add(`${c.row},${c.col}`)));
+
+  let playChime = false;
+  groups.forEach(group => {
+    if (group.size >= 5) playChime = true;
+    const hasGold = group.cells.some(c => goldGrid[c.row][c.col]);
+    const baseScore = group.size >= 5 ? 200 : group.size === 4 ? 100 : 50;
+    const scored = hasGold ? baseScore * 2 : baseScore;
+    points += scored;
+    showScoreFlash(group.cells, scored);
+  });
+
+  updateScoreDisplay();
+
+  if (playChime) {
+    chimeSound.currentTime = 0;
+    chimeSound.play().catch(() => {});
+  } else {
+    crunchSound.currentTime = 0;
+    crunchSound.play().catch(() => {});
+  }
+
+  matchedSet.forEach(key => {
+    const [r, c] = key.split(',').map(Number);
+    showBreakAnimation(r, c);
+  });
+
+  await sleep(520);
+
+  // Apply gravity and refill — gameGrid stays fully populated throughout
+  const newCells = new Set();
+  for (let col = 0; col < GRID_SIZE; col++) {
+    const keepIcons = [];
+    const keepGolds = [];
+    for (let row = 0; row < GRID_SIZE; row++) {
+      if (!matchedSet.has(`${row},${col}`)) {
+        keepIcons.push(gameGrid[row][col]);
+        keepGolds.push(goldGrid[row][col]);
+      }
+    }
+    const newCount = GRID_SIZE - keepIcons.length;
+    const newIcons = [];
+    const newGolds = [];
+    for (let i = 0; i < newCount; i++) {
+      newIcons.push(ICONS[Math.floor(Math.random() * ICONS.length)]);
+      newGolds.push(Math.random() < 0.01);
+      newCells.add(`${i},${col}`);
+    }
+    const allIcons = [...newIcons, ...keepIcons];
+    const allGolds = [...newGolds, ...keepGolds];
+    for (let row = 0; row < GRID_SIZE; row++) {
+      gameGrid[row][col] = allIcons[row];
+      goldGrid[row][col] = allGolds[row];
+    }
+  }
+
+  renderGrid(newCells);
+  await sleep(320);
+
+  await processMatches(depth + 1);
+}
+
 function flashInvalid(r1, c1) {
   const cell = getCellElement(r1, c1);
   if (!cell) return;
   cell.classList.add('invalid-swap');
   setTimeout(() => cell.classList.remove('invalid-swap'), 350);
   invalidSwapSound.currentTime = 0;
-  invalidSwapSound.play();
+  invalidSwapSound.play().catch(() => {});
 }
 
-function trySwap(r1, c1, r2, c2) {
+async function trySwap(r1, c1, r2, c2) {
+  if (isAnimating) return;
+
   const tmpIcon = gameGrid[r1][c1];
   const tmpGold = goldGrid[r1][c1];
-
   gameGrid[r1][c1] = gameGrid[r2][c2];
   gameGrid[r2][c2] = tmpIcon;
   goldGrid[r1][c1] = goldGrid[r2][c2];
   goldGrid[r2][c2] = tmpGold;
 
   if (hasMatchAt(r1, c1) || hasMatchAt(r2, c2)) {
+    isAnimating = true;
     updateCellDOM(r1, c1);
     updateCellDOM(r2, c2);
     whooshSound.currentTime = 0;
-    whooshSound.play();
+    whooshSound.play().catch(() => {});
+    await processMatches();
+    isAnimating = false;
   } else {
-    // Revert: r1c1 currently holds icon2, r2c2 currently holds icon1
     gameGrid[r2][c2] = gameGrid[r1][c1];
     gameGrid[r1][c1] = tmpIcon;
     goldGrid[r2][c2] = goldGrid[r1][c1];
@@ -146,7 +298,6 @@ function handleDragEnd(endX, endY) {
 
   const dx = endX - dragStartX;
   const dy = endY - dragStartY;
-
   dragStartCell.classList.remove('dragging');
 
   if (Math.abs(dx) < 15 && Math.abs(dy) < 15) {
@@ -156,7 +307,8 @@ function handleDragEnd(endX, endY) {
 
   const row = parseInt(dragStartCell.dataset.row);
   const col = parseInt(dragStartCell.dataset.col);
-  let targetRow, targetCol;
+  let targetRow;
+  let targetCol;
 
   if (Math.abs(dx) >= Math.abs(dy)) {
     targetRow = row;
@@ -166,11 +318,11 @@ function handleDragEnd(endX, endY) {
     targetCol = col;
   }
 
+  dragStartCell = null;
+
   if (targetRow >= 0 && targetRow < GRID_SIZE && targetCol >= 0 && targetCol < GRID_SIZE) {
     trySwap(row, col, targetRow, targetCol);
   }
-
-  dragStartCell = null;
 }
 
 function showWinScreen() {
@@ -193,6 +345,7 @@ function setupDragHandlers() {
   const container = document.getElementById('game-grid');
 
   container.addEventListener('mousedown', (e) => {
+    if (isAnimating) return;
     const cell = e.target.closest('.grid-cell');
     if (!cell) return;
     e.preventDefault();
@@ -207,6 +360,7 @@ function setupDragHandlers() {
   });
 
   container.addEventListener('touchstart', (e) => {
+    if (isAnimating) return;
     const touch = e.touches[0];
     const el = document.elementFromPoint(touch.clientX, touch.clientY);
     const cell = el && el.closest('.grid-cell');
@@ -225,9 +379,18 @@ function setupDragHandlers() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const playBtn = document.getElementById('menu-play');
+  if (playBtn) {
+    playBtn.addEventListener('click', () => {
+      document.getElementById('main-menu')?.classList.add('hidden');
+      document.getElementById('app')?.classList.remove('hidden');
+    });
+  }
+
   gameIconSet = pickIconSet();
   gameGrid = generateGrid();
   goldGrid = generateGoldGrid();
   renderGrid();
   setupDragHandlers();
+  updateScoreDisplay();
 });
