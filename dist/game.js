@@ -6,6 +6,9 @@ let gameGrid = [];
 let goldGrid = [];
 let gameIconSet;
 
+const whooshSound = new Audio('Sounds/whoosh.mp3');
+const invalidSwapSound = new Audio('Sounds/invalidswap.mp3');
+
 let dragStartCell = null;
 let dragStartX = 0;
 let dragStartY = 0;
@@ -104,12 +107,13 @@ function hasMatchAt(row, col) {
   return vCount >= 3;
 }
 
-function flashInvalid(r1, c1, r2, c2) {
-  [getCellElement(r1, c1), getCellElement(r2, c2)].forEach(cell => {
-    if (!cell) return;
-    cell.classList.add('invalid-swap');
-    setTimeout(() => cell.classList.remove('invalid-swap'), 350);
-  });
+function flashInvalid(r1, c1) {
+  const cell = getCellElement(r1, c1);
+  if (!cell) return;
+  cell.classList.add('invalid-swap');
+  setTimeout(() => cell.classList.remove('invalid-swap'), 350);
+  invalidSwapSound.currentTime = 0;
+  invalidSwapSound.play();
 }
 
 function trySwap(r1, c1, r2, c2) {
@@ -124,13 +128,15 @@ function trySwap(r1, c1, r2, c2) {
   if (hasMatchAt(r1, c1) || hasMatchAt(r2, c2)) {
     updateCellDOM(r1, c1);
     updateCellDOM(r2, c2);
+    whooshSound.currentTime = 0;
+    whooshSound.play();
   } else {
     // Revert: r1c1 currently holds icon2, r2c2 currently holds icon1
     gameGrid[r2][c2] = gameGrid[r1][c1];
     gameGrid[r1][c1] = tmpIcon;
     goldGrid[r2][c2] = goldGrid[r1][c1];
     goldGrid[r1][c1] = tmpGold;
-    flashInvalid(r1, c1, r2, c2);
+    flashInvalid(r1, c1);
   }
 }
 
