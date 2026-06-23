@@ -379,6 +379,24 @@ function showWinScreen() {
   screen.classList.remove('hidden');
 }
 
+function resetGame() {
+  stopTimer();
+  points = 0;
+  movesUsed = 0;
+  moveCap = Math.floor(Math.random() * 11) + 15;
+  timeLeft = 40;
+  isAnimating = false;
+  gameIconSet = pickIconSet();
+  gameGrid = generateGrid();
+  goldGrid = generateGoldGrid();
+  document.getElementById('loss-screen').classList.add('hidden');
+  renderGrid();
+  updateScoreDisplay();
+  updateMovesDisplay();
+  updateTimerDisplay();
+  startTimer();
+}
+
 function showLossScreen() {
   stopTimer();
   isAnimating = true;
@@ -434,6 +452,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('app')?.classList.remove('hidden');
     });
   }
+
+  document.getElementById('retry-btn')?.addEventListener('click', resetGame);
 
   moveCap = Math.floor(Math.random() * 11) + 15;
   movesUsed = 0;

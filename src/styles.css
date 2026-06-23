@@ -84,6 +84,30 @@ body {
   to   { opacity: 0.4; }
 }
 
+#retry-btn {
+  margin-top: 28px;
+  padding: 12px 36px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: #f5f0ff;
+  background: rgba(192, 48, 64, 0.25);
+  border: 1px solid rgba(192, 48, 64, 0.6);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+#retry-btn:hover {
+  background: rgba(192, 48, 64, 0.45);
+  border-color: #c03040;
+  transform: scale(1.04);
+}
+
+#retry-btn:active {
+  transform: scale(0.97);
+}
+
 #game-grid {
   display: grid;
   grid-template-columns: repeat(8, 68px);
