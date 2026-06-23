@@ -20,14 +20,20 @@ body {
   gap: 20px;
 }
 
-#score-bar {
+#hud {
+  display: flex;
+  gap: 48px;
+  justify-content: center;
+}
+
+.hud-block {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
 }
 
-.score-label {
+.hud-label {
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.26em;
@@ -42,6 +48,64 @@ body {
   letter-spacing: 0.04em;
   min-width: 80px;
   text-align: center;
+}
+
+#moves-display {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.2rem;
+  color: #f5f0ff;
+  letter-spacing: 0.04em;
+  min-width: 60px;
+  text-align: center;
+  transition: color 0.3s;
+}
+
+#moves-display.low {
+  color: #c03040;
+}
+
+#timer-display {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.2rem;
+  color: #f5f0ff;
+  letter-spacing: 0.04em;
+  min-width: 60px;
+  text-align: center;
+  transition: color 0.3s;
+}
+
+#timer-display.low {
+  color: #c03040;
+  animation: timer-pulse 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes timer-pulse {
+  from { opacity: 1; }
+  to   { opacity: 0.4; }
+}
+
+#retry-btn {
+  margin-top: 28px;
+  padding: 12px 36px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: #f5f0ff;
+  background: rgba(192, 48, 64, 0.25);
+  border: 1px solid rgba(192, 48, 64, 0.6);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+}
+
+#retry-btn:hover {
+  background: rgba(192, 48, 64, 0.45);
+  border-color: #c03040;
+  transform: scale(1.04);
+}
+
+#retry-btn:active {
+  transform: scale(0.97);
 }
 
 #game-grid {
@@ -383,7 +447,7 @@ body {
 #main-menu {
   position: fixed;
   inset: 0;
-  background-image: url('../assets/menu_bg.jpg');
+  background-image: url('../assets/menu elements/menu picture.png');
   background-size: cover;
   background-position: center;
   z-index: 200;

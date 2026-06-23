@@ -10,6 +10,10 @@ let goldGrid: boolean[][] = [];
 let gameIconSet: IconSet;
 let points = 0;
 let isAnimating = false;
+let moveCap = 0;
+let movesUsed = 0;
+let timeLeft = 40;
+let timerInterval: number | null = null;
 
 const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
@@ -99,6 +103,41 @@ function updateCellDOM(row: number, col: number): void {
 function updateScoreDisplay(): void {
   const el = document.getElementById('score-display');
   if (el) el.textContent = String(points);
+}
+
+function updateTimerDisplay(): void {
+  const el = document.getElementById('timer-display');
+  if (!el) return;
+  el.textContent = String(timeLeft);
+  el.classList.toggle('low', timeLeft <= 10);
+}
+
+function startTimer(): void {
+  if (timerInterval !== null) clearInterval(timerInterval);
+  timerInterval = window.setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval!);
+      timerInterval = null;
+      showLossScreen();
+    }
+  }, 1000);
+}
+
+function stopTimer(): void {
+  if (timerInterval !== null) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function updateMovesDisplay(): void {
+  const el = document.getElementById('moves-display');
+  if (!el) return;
+  const remaining = moveCap - movesUsed;
+  el.textContent = String(remaining);
+  el.classList.toggle('low', remaining <= 3);
 }
 
 type MatchGroup = { cells: { row: number; col: number }[]; size: number };
@@ -289,6 +328,13 @@ async function trySwap(r1: number, c1: number, r2: number, c2: number): Promise<
     updateCellDOM(r2, c2);
     whooshSound.currentTime = 0;
     whooshSound.play().catch(() => {});
+    movesUsed++;
+    updateMovesDisplay();
+    if (movesUsed >= moveCap) {
+      await processMatches();
+      showLossScreen();
+      return;
+    }
     await processMatches();
     isAnimating = false;
   } else {
@@ -340,7 +386,27 @@ function showWinScreen(): void {
   screen.classList.remove('hidden');
 }
 
+function resetGame(): void {
+  stopTimer();
+  points = 0;
+  movesUsed = 0;
+  moveCap = Math.floor(Math.random() * 11) + 15;
+  timeLeft = 40;
+  isAnimating = false;
+  gameIconSet = pickIconSet();
+  gameGrid = generateGrid();
+  goldGrid = generateGoldGrid();
+  document.getElementById('loss-screen')!.classList.add('hidden');
+  renderGrid();
+  updateScoreDisplay();
+  updateMovesDisplay();
+  updateTimerDisplay();
+  startTimer();
+}
+
 function showLossScreen(): void {
+  stopTimer();
+  isAnimating = true;
   const screen = document.getElementById('loss-screen');
   const scoreEl = document.getElementById('loss-score');
   if (!screen || !scoreEl) return;
@@ -394,10 +460,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  document.getElementById('retry-btn')?.addEventListener('click', resetGame);
+
+  moveCap = Math.floor(Math.random() * 11) + 15;
+  movesUsed = 0;
+  timeLeft = 40;
   gameIconSet = pickIconSet();
   gameGrid = generateGrid();
   goldGrid = generateGoldGrid();
   renderGrid();
   setupDragHandlers();
   updateScoreDisplay();
+  updateMovesDisplay();
+  updateTimerDisplay();
+  startTimer();
 });
