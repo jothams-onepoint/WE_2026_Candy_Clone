@@ -128,7 +128,6 @@ function renderQuests() {
 
 function updateLevelInfo() {
   const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
-  const nextLevel = currentLevel + 1;
   const winsPerLevel = 3;
   const currentLevelWins = parseInt(localStorage.getItem(`levelWins_${currentLevel}`) || '0');
   const winsUntilNext = Math.max(0, winsPerLevel - currentLevelWins);
@@ -143,9 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
   renderQuests();
   const level = parseInt(localStorage.getItem('candyLevel') || '1');
   const levelEl = document.getElementById('level-number');
-  if (levelEl) {
-    levelEl.textContent = String(level);
-    levelEl.addEventListener('click', () => {
+  if (levelEl) levelEl.textContent = String(level);
+
+  const levelDisplay = document.getElementById('level-display');
+  if (levelDisplay) {
+    levelDisplay.addEventListener('click', () => {
       updateLevelInfo();
       openPopup('popup-level');
     });

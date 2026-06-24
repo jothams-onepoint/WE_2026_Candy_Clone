@@ -521,13 +521,43 @@ function applyBackground(bg: string): void {
   document.body.style.backgroundPosition = 'center';
 }
 
+function showObjectiveScreen(difficulty: string): void {
+  const baseTiers: { [key: string]: { title: string; basePoints: number; coins: number } } = {
+    easy: { title: 'BEGINNER', basePoints: 500, coins: 75 },
+    medium: { title: 'CHALLENGE', basePoints: 1500, coins: 150 },
+    hard: { title: 'MASTERY', basePoints: 2500, coins: 300 },
+  };
+
+  const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
+  const tier = baseTiers[difficulty] || baseTiers.medium;
+  const scaledPoints = tier.basePoints + (currentLevel - 1) * 500;
+
+  const titleEl = document.getElementById('objective-title');
+  const descEl = document.getElementById('objective-description');
+  const coinsEl = document.getElementById('reward-coins');
+  const screen = document.getElementById('objective-screen');
+
+  if (titleEl) titleEl.textContent = `🎯 ${tier.title}`;
+  if (descEl) descEl.textContent = `Earn ${scaledPoints} points`;
+  if (coinsEl) coinsEl.textContent = `${tier.coins} coins`;
+
+  if (screen) screen.classList.remove('hidden');
+}
+
 function startGame(): void {
-  winTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');
+  const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
+  const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
+  const basePoints: { [key: string]: number } = {
+    easy: 500,
+    medium: 1500,
+    hard: 2500,
+  };
+  winTarget = (basePoints[diff] || basePoints.medium) + (currentLevel - 1) * 500;
+
   savedBackground = applyRandomBackground();
   savedMoveCap = Math.floor(Math.random() * 11) + 15;
   moveCap = savedMoveCap;
   movesUsed = 0;
-  const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
   timeLeft = diff === 'easy' ? 120 : diff === 'hard' ? 60 : 90;
   isAnimating = false;
   gameIconSet = pickIconSet();
@@ -619,18 +649,28 @@ function setupDragHandlers(): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const autostart = new URLSearchParams(window.location.search).has('autostart');
+  const params = new URLSearchParams(window.location.search);
+  const autostart = params.has('autostart');
+  const difficulty = params.get('difficulty') || 'medium';
 
   if (autostart) {
     document.getElementById('main-menu')?.classList.add('hidden');
     document.getElementById('app')?.classList.remove('hidden');
+    document.getElementById('objective-screen')?.classList.remove('hidden');
     startGame();
+    showObjectiveScreen(difficulty);
   }
 
   document.getElementById('menu-play')?.addEventListener('click', () => {
     document.getElementById('main-menu')?.classList.add('hidden');
     document.getElementById('app')?.classList.remove('hidden');
+    document.getElementById('objective-screen')?.classList.remove('hidden');
     startGame();
+    showObjectiveScreen(difficulty);
+  });
+
+  document.getElementById('objective-start-btn')?.addEventListener('click', () => {
+    document.getElementById('objective-screen')?.classList.add('hidden');
   });
 
   document.getElementById('retry-btn')?.addEventListener('click', resetGame);
