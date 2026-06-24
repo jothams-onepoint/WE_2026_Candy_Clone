@@ -263,6 +263,13 @@ async function processMatches(depth = 0): Promise<void> {
 
   updateScoreDisplay();
 
+  if (points >= 1000) {
+    stopTimer();
+    isAnimating = true;
+    showWinScreen();
+    return;
+  }
+
   if (playChime) {
     chimeSound.currentTime = 0;
     chimeSound.play().catch(() => {});
