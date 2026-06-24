@@ -150,6 +150,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const musicToggle = document.getElementById('music-toggle');
+  if (musicToggle) {
+    musicToggle.checked = localStorage.getItem('musicEnabled') !== 'false';
+    musicToggle.addEventListener('change', () => {
+      localStorage.setItem('musicEnabled', musicToggle.checked ? 'true' : 'false');
+    });
+  }
+
   const level = parseInt(localStorage.getItem('candyLevel') || '1');
   const levelEl = document.getElementById('level-number');
   if (levelEl) levelEl.textContent = String(level);

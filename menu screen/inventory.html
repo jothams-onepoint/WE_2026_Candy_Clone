@@ -228,11 +228,38 @@
     }
 
     .bg-name {
-      padding: 8px;
+      padding: 6px 8px 4px;
       font-size: 11px;
       font-weight: 700;
       color: #333;
       text-align: center;
+    }
+
+    .bg-select-btn {
+      width: 100%;
+      padding: 5px;
+      border: none;
+      border-radius: 0 0 7px 7px;
+      font-weight: 700;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: linear-gradient(135deg, #2d7a3e 0%, #1e5a2c 100%);
+      color: #fff;
+    }
+
+    .bg-select-btn:hover {
+      background: linear-gradient(135deg, #3d8a4e 0%, #2e6a3c 100%);
+    }
+
+    .bg-select-btn.selected {
+      background: linear-gradient(135deg, #7a3aad 0%, #5a1a8a 100%);
+      cursor: default;
+    }
+
+    .bg-item.bg-selected {
+      border-color: #9933cc;
+      box-shadow: 0 0 10px rgba(150, 50, 220, 0.5);
     }
 
     .back-button {
@@ -334,6 +361,12 @@
       });
     }
 
+    function selectBackground(bgId) {
+      playClick();
+      localStorage.setItem('candySelectedBg', bgId);
+      renderInventory();
+    }
+
     function renderInventory() {
       // BOOSTERS
       const boostedOwned = BOOSTER_DATA.filter(b => inventory[b.id] > 0);
@@ -367,12 +400,21 @@
           </div>
         `;
       } else {
-        const bgHtml = bgOwned.map(bg => `
-          <div class="bg-item">
-            <div class="bg-preview" style="background-image: url('${bg.path}')"></div>
-            <div class="bg-name">${bg.name}</div>
-          </div>
-        `).join('');
+        const selectedBgId = localStorage.getItem('candySelectedBg');
+        const bgHtml = bgOwned.map(bg => {
+          const isSelected = selectedBgId === bg.id;
+          return `
+            <div class="bg-item${isSelected ? ' bg-selected' : ''}">
+              <div class="bg-preview" style="background-image: url('${bg.path}')"></div>
+              <div class="bg-name">${bg.name}</div>
+              <button class="bg-select-btn${isSelected ? ' selected' : ''}"
+                onclick="${isSelected ? '' : `selectBackground('${bg.id}')`}"
+                ${isSelected ? 'disabled' : ''}>
+                ${isSelected ? '✓ SELECTED' : 'SELECT'}
+              </button>
+            </div>
+          `;
+        }).join('');
         document.getElementById('backgrounds-container').innerHTML = bgHtml;
       }
     }
