@@ -179,8 +179,10 @@
   <script>
     const clickSound = new Audio('../assets/Sounds/pop.mp3');
     function playClick() {
-      clickSound.currentTime = 0;
-      clickSound.play().catch(() => {});
+      if (localStorage.getItem('soundEnabled') !== 'false') {
+        clickSound.currentTime = 0;
+        clickSound.play().catch(() => {});
+      }
       window.location.href = 'index.html';
     }
   </script>

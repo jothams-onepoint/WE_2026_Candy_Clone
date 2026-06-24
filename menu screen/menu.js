@@ -3,6 +3,7 @@ const BASE = '../assets/animations/menu animations/';
 const clickSound = new Audio('../assets/Sounds/pop.mp3');
 
 function playClickSound() {
+  if (localStorage.getItem('soundEnabled') === 'false') return;
   clickSound.currentTime = 0;
   clickSound.play().catch(() => {});
 }
@@ -207,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   renderQuests();
+
   updateLevelDisplay();
 
   // Level info display click handler
@@ -218,6 +220,14 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('popup-level-info')?.addEventListener('click', (e) => {
     if (e.target.id === 'popup-level-info') closePopup('popup-level-info');
   });
+
+  const soundToggle = document.getElementById('sound-toggle');
+  if (soundToggle) {
+    soundToggle.checked = localStorage.getItem('soundEnabled') !== 'false';
+    soundToggle.addEventListener('change', () => {
+      localStorage.setItem('soundEnabled', soundToggle.checked ? 'true' : 'false');
+    });
+  }
 
   const levelDisplay = document.getElementById('level-display');
   if (levelDisplay) {
@@ -237,9 +247,9 @@ document.addEventListener('DOMContentLoaded', () => {
     openPopup('popup-difficulty');
   });
   setupButton('btn-settings', BASE + 'settings_idle.png', null,                            () => openPopup('popup-settings'));
-  setupButton('btn-home',     BASE + 'home_idle.png',     null,                            () => window.location.href = 'inventory.html');
+  setupButton('btn-home',     BASE + 'home_idle.png',     null,                            () => setTimeout(() => window.location.href = 'inventory.html', 200));
   setupButton('btn-quests',   BASE + 'quests_idle.png',   null,                            () => { renderQuests(); openPopup('popup-quests'); });
-  setupButton('btn-shop',     BASE + 'shop_idle.png',     null,                            () => window.location.href = 'shop.html');
+  setupButton('btn-shop',     BASE + 'shop_idle.png',     null,                            () => setTimeout(() => window.location.href = 'shop.html', 200));
 
   document.getElementById('popup-settings')?.addEventListener('click', (e) => {
     if (e.target.id === 'popup-settings') closePopup('popup-settings');
@@ -252,8 +262,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Close buttons
   document.querySelectorAll('.popup-close').forEach(btn => {
     btn.addEventListener('click', (e) => {
-      playClickSound();
       const popup = e.target.closest('.popup');
+      const silent = ['popup-quests', 'popup-settings', 'popup-level'];
+      if (popup && !silent.includes(popup.id)) playClickSound();
       if (popup) closePopup(popup.id);
     });
   });

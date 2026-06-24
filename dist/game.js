@@ -1,3 +1,4 @@
+function isSoundOn() { return localStorage.getItem('soundEnabled') !== 'false'; }
 const ICONS = ['ant', 'blue_flower', 'grass', 'potted_plant', 'red_flower', 'shovel'];
 const ICON_SETS = ['tile_icons_red', 'Tile_icons_blue'];
 const BACKGROUNDS = [
@@ -27,6 +28,163 @@ let savedIconSet = 'tile_icons_red';
 let savedMoveCap = 0;
 let savedBackground = '';
 let savedBgIndex = 0;
+
+let bombModeActive = false;
+let bombCursorMoveHandler = null;
+
+const BOOSTERS = [
+  { id: 'bomb',        emoji: '💣' },
+  { id: 'lightning',   emoji: '⚡' },
+  { id: 'extra-life',  emoji: '❤️' },
+  { id: 'color-blast', emoji: '🌈' },
+];
+
+function cancelBombModeKey(e) {
+  if (e.key === 'Escape') cancelBombMode();
+}
+
+function enterBombMode() {
+  bombModeActive = true;
+  document.getElementById('game-grid')?.classList.add('bomb-mode');
+  const cursor = document.createElement('div');
+  cursor.id = 'bomb-cursor';
+  cursor.textContent = '💣';
+  document.body.appendChild(cursor);
+  bombCursorMoveHandler = (e) => {
+    cursor.style.left = `${e.clientX}px`;
+    cursor.style.top = `${e.clientY}px`;
+  };
+  document.addEventListener('mousemove', bombCursorMoveHandler);
+  document.addEventListener('keydown', cancelBombModeKey);
+}
+
+function cancelBombMode() {
+  bombModeActive = false;
+  document.getElementById('game-grid')?.classList.remove('bomb-mode');
+  document.getElementById('bomb-cursor')?.remove();
+  clearBombHighlight();
+  if (bombCursorMoveHandler) {
+    document.removeEventListener('mousemove', bombCursorMoveHandler);
+    bombCursorMoveHandler = null;
+  }
+  document.removeEventListener('keydown', cancelBombModeKey);
+}
+
+function clearBombHighlight() {
+  document.querySelectorAll('.bomb-highlight').forEach(el => el.classList.remove('bomb-highlight'));
+}
+
+function highlightBombArea(centerRow, centerCol) {
+  clearBombHighlight();
+  for (let r = centerRow - 1; r <= centerRow + 1; r++) {
+    for (let c = centerCol - 1; c <= centerCol + 1; c++) {
+      if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
+        getCellElement(r, c)?.classList.add('bomb-highlight');
+      }
+    }
+  }
+}
+
+async function fireBomb(centerRow, centerCol) {
+  if (!bombModeActive) return;
+  const inv = JSON.parse(localStorage.getItem('candyInventory') || '{}');
+  if (!inv['bomb'] || inv['bomb'] <= 0) { cancelBombMode(); return; }
+  inv['bomb']--;
+  localStorage.setItem('candyInventory', JSON.stringify(inv));
+  cancelBombMode();
+  isAnimating = true;
+
+  const affected = [];
+  for (let r = centerRow - 1; r <= centerRow + 1; r++) {
+    for (let c = centerCol - 1; c <= centerCol + 1; c++) {
+      if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE) {
+        affected.push({ row: r, col: c });
+      }
+    }
+  }
+
+  affected.forEach(({ row, col }) => {
+    const scored = goldGrid[row][col] ? 600 : 200;
+    points += scored;
+    showScoreFlash([{ row, col }], scored);
+  });
+  updateScoreDisplay();
+
+  if (isSoundOn()) { crunchSound.currentTime = 0.8; crunchSound.play().catch(() => {}); }
+  affected.forEach(({ row, col }) => showBreakAnimation(row, col));
+  await sleep(520);
+
+  const removedSet = new Set(affected.map(({ row, col }) => `${row},${col}`));
+  const newCells = new Set();
+  for (let col = 0; col < GRID_SIZE; col++) {
+    const keepIcons = [];
+    const keepGolds = [];
+    for (let row = 0; row < GRID_SIZE; row++) {
+      if (!removedSet.has(`${row},${col}`)) {
+        keepIcons.push(gameGrid[row][col]);
+        keepGolds.push(goldGrid[row][col]);
+      }
+    }
+    const newCount = GRID_SIZE - keepIcons.length;
+    const newIcons = [];
+    const newGolds = [];
+    for (let i = 0; i < newCount; i++) {
+      newIcons.push(ICONS[Math.floor(Math.random() * ICONS.length)]);
+      newGolds.push(Math.random() < 0.01);
+      newCells.add(`${i},${col}`);
+    }
+    const allIcons = [...newIcons, ...keepIcons];
+    const allGolds = [...newGolds, ...keepGolds];
+    for (let row = 0; row < GRID_SIZE; row++) {
+      gameGrid[row][col] = allIcons[row];
+      goldGrid[row][col] = allGolds[row];
+    }
+  }
+
+  renderGrid(newCells);
+  await sleep(320);
+
+  if (points >= winTarget) {
+    stopTimer();
+    showWinScreen();
+    return;
+  }
+
+  await processMatches();
+  renderBoosterBar();
+  isAnimating = false;
+}
+
+function activateBooster(id) {
+  if (isAnimating || bombModeActive) return;
+  const inv = JSON.parse(localStorage.getItem('candyInventory') || '{}');
+  if (!inv[id] || inv[id] <= 0) return;
+  if (id === 'bomb') { enterBombMode(); return; }
+  inv[id]--;
+  localStorage.setItem('candyInventory', JSON.stringify(inv));
+  switch (id) {
+    case 'lightning':   moveCap += 10; updateMovesDisplay(); break;
+    case 'extra-life':  timeLeft += 30; updateTimerDisplay(); break;
+    case 'color-blast': moveCap += 15; updateMovesDisplay(); break;
+  }
+  renderBoosterBar();
+}
+
+function renderBoosterBar() {
+  const bar = document.getElementById('booster-bar');
+  if (!bar) return;
+  const inv = JSON.parse(localStorage.getItem('candyInventory') || '{}');
+  bar.innerHTML = '';
+  BOOSTERS.forEach(b => {
+    const count = inv[b.id] || 0;
+    if (count <= 0) return;
+    const slot = document.createElement('div');
+    slot.className = 'booster-slot';
+    slot.innerHTML = `<span class="booster-slot-emoji">${b.emoji}</span><span class="booster-slot-count">×${count}</span>`;
+    slot.addEventListener('click', () => activateBooster(b.id));
+    bar.appendChild(slot);
+  });
+}
 
 const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
@@ -319,14 +477,6 @@ async function processMatches(depth = 0) {
     return;
   }
 
-  if (playChime) {
-    chimeSound.currentTime = 0;
-    chimeSound.play().catch(() => {});
-  } else {
-    crunchSound.currentTime = 0;
-    crunchSound.play().catch(() => {});
-  }
-
   // Flash matched tiles briefly before breaking
   matchedSet.forEach(key => {
     const [r, c] = key.split(',').map(Number);
@@ -334,7 +484,17 @@ async function processMatches(depth = 0) {
     if (cell) cell.classList.add('matched-flash');
   });
 
-  await sleep(230);
+  if (isSoundOn()) {
+    if (playChime) {
+      chimeSound.currentTime = 0;
+      chimeSound.play().catch(() => {});
+    } else {
+      crunchSound.currentTime = 0.8;
+      crunchSound.play().catch(() => {});
+    }
+  }
+
+  await sleep(100);
 
   matchedSet.forEach(key => {
     const [r, c] = key.split(',').map(Number);
@@ -381,8 +541,7 @@ function flashInvalid(r1, c1) {
   if (!cell) return;
   cell.classList.add('invalid-swap');
   setTimeout(() => cell.classList.remove('invalid-swap'), 350);
-  invalidSwapSound.currentTime = 0;
-  invalidSwapSound.play().catch(() => {});
+  if (isSoundOn()) { invalidSwapSound.currentTime = 0; invalidSwapSound.play().catch(() => {}); }
 }
 
 const SWAP_DURATION = 180;
@@ -445,8 +604,7 @@ async function trySwap(r1, c1, r2, c2) {
 
   if (hasMatchAt(r1, c1) || hasMatchAt(r2, c2)) {
     isAnimating = true;
-    whooshSound.currentTime = 0;
-    whooshSound.play().catch(() => {});
+    if (isSoundOn()) { whooshSound.currentTime = 0; whooshSound.play().catch(() => {}); }
     await animateSwap(r1, c1, r2, c2);
     movesUsed++;
     updateMovesDisplay();
@@ -600,6 +758,7 @@ function startGame() {
   updateScoreDisplay();
   updateMovesDisplay();
   updateTimerDisplay();
+  renderBoosterBar();
   startTimer();
 }
 
@@ -621,6 +780,7 @@ function resetGame() {
   updateScoreDisplay();
   updateMovesDisplay();
   updateTimerDisplay();
+  renderBoosterBar();
   startTimer();
 }
 
@@ -644,6 +804,11 @@ function setupDragHandlers() {
   const container = document.getElementById('game-grid');
 
   container.addEventListener('mousedown', (e) => {
+    if (bombModeActive) {
+      const cell = e.target.closest('.grid-cell');
+      if (cell) { e.preventDefault(); fireBomb(parseInt(cell.dataset.row), parseInt(cell.dataset.col)); }
+      return;
+    }
     if (isAnimating) return;
     const cell = e.target.closest('.grid-cell');
     if (!cell) return;
@@ -655,10 +820,22 @@ function setupDragHandlers() {
   });
 
   document.addEventListener('mouseup', (e) => {
+    if (bombModeActive) return;
     handleDragEnd(e.clientX, e.clientY);
   });
 
+  container.addEventListener('mousemove', (e) => {
+    if (!bombModeActive) return;
+    const cell = e.target.closest('.grid-cell');
+    if (cell) highlightBombArea(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+  });
+
+  container.addEventListener('mouseleave', () => {
+    if (bombModeActive) clearBombHighlight();
+  });
+
   container.addEventListener('touchstart', (e) => {
+    if (bombModeActive) { e.preventDefault(); return; }
     if (isAnimating) return;
     const touch = e.touches[0];
     const el = document.elementFromPoint(touch.clientX, touch.clientY);
@@ -671,7 +848,23 @@ function setupDragHandlers() {
     cell.classList.add('dragging');
   }, { passive: false });
 
+  container.addEventListener('touchmove', (e) => {
+    if (!bombModeActive) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    const cell = el && el.closest('.grid-cell');
+    if (cell) highlightBombArea(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+  }, { passive: false });
+
   document.addEventListener('touchend', (e) => {
+    if (bombModeActive) {
+      const touch = e.changedTouches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const cell = el && el.closest('.grid-cell');
+      if (cell) fireBomb(parseInt(cell.dataset.row), parseInt(cell.dataset.col));
+      return;
+    }
     const touch = e.changedTouches[0];
     handleDragEnd(touch.clientX, touch.clientY);
   });

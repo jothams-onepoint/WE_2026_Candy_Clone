@@ -277,8 +277,17 @@
 
   <script>
     const clickSound = new Audio('../assets/Sounds/pop.mp3');
-    function playClick() { clickSound.currentTime = 0; clickSound.play().catch(() => {}); }
-    function goBack() { playClick(); window.location.href = 'index.html'; }
+
+    function playClick() {
+      if (localStorage.getItem('soundEnabled') === 'false') return;
+      clickSound.currentTime = 0;
+      clickSound.play().catch(() => {});
+    }
+
+    function goBack() {
+      playClick();
+      window.location.href = 'index.html';
+    }
 
     const BOOSTER_DATA = [
       { id: 'bomb',        name: 'Bomb',        emoji: '💣', desc: '+5 moves',  price: 50  },
