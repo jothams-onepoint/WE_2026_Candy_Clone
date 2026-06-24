@@ -418,6 +418,11 @@ function resetGame() {
   startGame();
 }
 
+function goToMenu() {
+  stopTimer();
+  window.location.href = 'menu screen/index.html';
+}
+
 function showLossScreen() {
   stopTimer();
   isAnimating = true;
@@ -466,6 +471,14 @@ function setupDragHandlers() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const autostart = new URLSearchParams(window.location.search).has('autostart');
+
+  if (autostart) {
+    document.getElementById('main-menu')?.classList.add('hidden');
+    document.getElementById('app')?.classList.remove('hidden');
+    startGame();
+  }
+
   document.getElementById('menu-play')?.addEventListener('click', () => {
     document.getElementById('main-menu')?.classList.add('hidden');
     document.getElementById('app')?.classList.remove('hidden');
@@ -473,4 +486,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('retry-btn')?.addEventListener('click', resetGame);
+  document.getElementById('win-menu-btn')?.addEventListener('click', goToMenu);
+  document.getElementById('loss-menu-btn')?.addEventListener('click', goToMenu);
 });

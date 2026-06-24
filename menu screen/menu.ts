@@ -44,7 +44,7 @@ function closePopup(popupId: string): void {
 }
 
 document.addEventListener('DOMContentLoaded', (): void => {
-  setupButton('btn-play',     BASE + 'play_idle.png',     null,                            () => window.location.href = 'gameplay.html');
+  setupButton('btn-play',     BASE + 'play_idle.png',     null,                            () => window.location.href = '../index.html?autostart=1');
   setupButton('btn-settings', BASE + 'settings_idle.png', BASE + 'settings_click.png',     () => openPopup('popup-settings'));
   setupButton('btn-home',     BASE + 'home_idle.png',     BASE + 'home_click.png');
   setupButton('btn-quests',   BASE + 'quests_idle.png',   BASE + 'quests_click.png',       () => openPopup('popup-quests'));
