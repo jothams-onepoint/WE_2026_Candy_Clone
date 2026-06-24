@@ -154,7 +154,7 @@ body {
   justify-content: center;
   backdrop-filter: blur(2px);
   cursor: grab;
-  transition: transform 0.1s ease, opacity 0.1s ease;
+  transition: opacity 0.1s ease;
   position: relative;
 }
 

@@ -313,6 +313,54 @@ function flashInvalid(r1, c1) {
   invalidSwapSound.play().catch(() => {});
 }
 
+const SWAP_DURATION = 180;
+
+async function animateSwap(r1, c1, r2, c2) {
+  const cell1 = getCellElement(r1, c1);
+  const cell2 = getCellElement(r2, c2);
+  if (!cell1 || !cell2) {
+    updateCellDOM(r1, c1);
+    updateCellDOM(r2, c2);
+    return;
+  }
+
+  const rect1 = cell1.getBoundingClientRect();
+  const rect2 = cell2.getBoundingClientRect();
+  const dx = rect2.left - rect1.left;
+  const dy = rect2.top - rect1.top;
+
+  const ease = `transform ${SWAP_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+  cell1.style.transition = ease;
+  cell2.style.transition = ease;
+  cell1.style.zIndex = '5';
+  cell2.style.zIndex = '4';
+
+  // Force reflow so transition is active before transform changes
+  void cell1.getBoundingClientRect();
+
+  // Slide each cell to the other's position (icons unchanged during slide)
+  cell1.style.transform = `translate(${dx}px, ${dy}px)`;
+  cell2.style.transform = `translate(${-dx}px, ${-dy}px)`;
+
+  await sleep(SWAP_DURATION);
+
+  // Snap back to actual grid positions and update icons
+  cell1.style.transition = 'none';
+  cell2.style.transition = 'none';
+  cell1.style.transform = '';
+  cell2.style.transform = '';
+  cell1.style.zIndex = '';
+  cell2.style.zIndex = '';
+  updateCellDOM(r1, c1);
+  updateCellDOM(r2, c2);
+
+  // Restore CSS transition on next frame
+  requestAnimationFrame(() => {
+    cell1.style.transition = '';
+    cell2.style.transition = '';
+  });
+}
+
 async function trySwap(r1, c1, r2, c2) {
   if (isAnimating) return;
 
@@ -325,10 +373,9 @@ async function trySwap(r1, c1, r2, c2) {
 
   if (hasMatchAt(r1, c1) || hasMatchAt(r2, c2)) {
     isAnimating = true;
-    updateCellDOM(r1, c1);
-    updateCellDOM(r2, c2);
     whooshSound.currentTime = 0;
     whooshSound.play().catch(() => {});
+    await animateSwap(r1, c1, r2, c2);
     movesUsed++;
     updateMovesDisplay();
     if (movesUsed >= moveCap) {
