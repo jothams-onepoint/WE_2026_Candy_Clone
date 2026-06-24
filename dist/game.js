@@ -14,11 +14,18 @@ let gameGrid = [];
 let goldGrid = [];
 let gameIconSet;
 let points = 0;
+let winTarget = 500;
 let isAnimating = false;
 let moveCap = 0;
 let movesUsed = 0;
 let timeLeft = 40;
 let timerInterval = null;
+
+let savedGrid = [];
+let savedGoldGrid = [];
+let savedIconSet = 'tile_icons_red';
+let savedMoveCap = 0;
+let savedBackground = '';
 
 const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
@@ -256,7 +263,7 @@ async function processMatches(depth = 0) {
 
   updateScoreDisplay();
 
-  if (points >= 1000) {
+  if (points >= winTarget) {
     stopTimer();
     isAnimating = true;
     showWinScreen();
@@ -434,6 +441,11 @@ function handleDragEnd(endX, endY) {
 }
 
 function showWinScreen() {
+  const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
+  const currentTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');
+  localStorage.setItem('candyLevel', String(currentLevel + 1));
+  localStorage.setItem('candyWinTarget', String(currentTarget + 50));
+
   const screen = document.getElementById('win-screen');
   const scoreEl = document.getElementById('win-score');
   if (!screen || !scoreEl) return;
@@ -446,17 +458,29 @@ function applyRandomBackground() {
   document.body.style.backgroundImage = `url('${bg}')`;
   document.body.style.backgroundSize = 'cover';
   document.body.style.backgroundPosition = 'center';
+  return bg;
+}
+
+function applyBackground(bg) {
+  document.body.style.backgroundImage = `url('${bg}')`;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
 }
 
 function startGame() {
-  applyRandomBackground();
-  moveCap = Math.floor(Math.random() * 11) + 15;
+  winTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');
+  savedBackground = applyRandomBackground();
+  savedMoveCap = Math.floor(Math.random() * 11) + 15;
+  moveCap = savedMoveCap;
   movesUsed = 0;
   timeLeft = 40;
   isAnimating = false;
   gameIconSet = pickIconSet();
+  savedIconSet = gameIconSet;
   gameGrid = generateGrid();
+  savedGrid = gameGrid.map(row => [...row]);
   goldGrid = generateGoldGrid();
+  savedGoldGrid = goldGrid.map(row => [...row]);
   renderGrid();
   setupDragHandlers();
   updateScoreDisplay();
@@ -469,7 +493,20 @@ function resetGame() {
   stopTimer();
   points = 0;
   document.getElementById('loss-screen').classList.add('hidden');
-  startGame();
+  applyBackground(savedBackground);
+  moveCap = savedMoveCap;
+  movesUsed = 0;
+  timeLeft = 40;
+  isAnimating = false;
+  gameIconSet = savedIconSet;
+  gameGrid = savedGrid.map(row => [...row]);
+  goldGrid = savedGoldGrid.map(row => [...row]);
+  renderGrid();
+  setupDragHandlers();
+  updateScoreDisplay();
+  updateMovesDisplay();
+  updateTimerDisplay();
+  startTimer();
 }
 
 function goToMenu() {
