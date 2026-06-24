@@ -115,11 +115,37 @@ function updateTimerDisplay() {
   el.classList.toggle('low', timeLeft <= 10);
 }
 
+function show10SecondWarning() {
+  if (document.getElementById('ten-second-warning')) return;
+  const el = document.createElement('div');
+  el.id = 'ten-second-warning';
+  el.textContent = '⚠️ 10 SECONDS LEFT! ⚠️';
+  document.body.appendChild(el);
+}
+
+function ensureUrgencyVignette() {
+  if (document.getElementById('urgency-vignette')) return;
+  const el = document.createElement('div');
+  el.id = 'urgency-vignette';
+  document.body.appendChild(el);
+}
+
+function removeUrgencyEffects() {
+  document.getElementById('ten-second-warning')?.remove();
+  document.getElementById('urgency-vignette')?.remove();
+}
+
 function startTimer() {
   if (timerInterval !== null) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
     updateTimerDisplay();
+    if (timeLeft === 10) {
+      show10SecondWarning();
+    }
+    if (timeLeft <= 10 && timeLeft > 0) {
+      ensureUrgencyVignette();
+    }
     if (timeLeft <= 0) {
       clearInterval(timerInterval);
       timerInterval = null;
@@ -264,12 +290,21 @@ async function processMatches(depth = 0) {
     crunchSound.play().catch(() => {});
   }
 
+  // Flash matched tiles briefly before breaking
+  matchedSet.forEach(key => {
+    const [r, c] = key.split(',').map(Number);
+    const cell = getCellElement(r, c);
+    if (cell) cell.classList.add('matched-flash');
+  });
+
+  await sleep(230);
+
   matchedSet.forEach(key => {
     const [r, c] = key.split(',').map(Number);
     showBreakAnimation(r, c);
   });
 
-  await sleep(520);
+  await sleep(300);
 
   // Apply gravity and refill — gameGrid stays fully populated throughout
   const newCells = new Set();
@@ -380,6 +415,8 @@ function handleDragEnd(endX, endY) {
 }
 
 function showWinScreen() {
+  stopTimer();
+  removeUrgencyEffects();
   const screen = document.getElementById('win-screen');
   const scoreEl = document.getElementById('win-score');
   if (!screen || !scoreEl) return;
@@ -398,7 +435,8 @@ function startGame() {
   applyRandomBackground();
   moveCap = Math.floor(Math.random() * 11) + 15;
   movesUsed = 0;
-  timeLeft = 40;
+  const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
+  timeLeft = diff === 'easy' ? 120 : diff === 'hard' ? 60 : 90;
   isAnimating = false;
   gameIconSet = pickIconSet();
   gameGrid = generateGrid();
@@ -413,6 +451,7 @@ function startGame() {
 
 function resetGame() {
   stopTimer();
+  removeUrgencyEffects();
   points = 0;
   document.getElementById('loss-screen').classList.add('hidden');
   startGame();
@@ -425,6 +464,7 @@ function goToMenu() {
 
 function showLossScreen() {
   stopTimer();
+  removeUrgencyEffects();
   isAnimating = true;
   const screen = document.getElementById('loss-screen');
   const scoreEl = document.getElementById('loss-score');

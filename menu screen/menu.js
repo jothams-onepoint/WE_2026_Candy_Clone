@@ -48,7 +48,7 @@ function closePopup(popupId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  setupButton('btn-play',     BASE + 'play_idle.png',     null,                            () => window.location.href = '../index.html?autostart=1');
+  setupButton('btn-play',     BASE + 'play_idle.png',     null,                            () => openPopup('popup-difficulty'));
   setupButton('btn-settings', BASE + 'settings_idle.png', BASE + 'settings_click.png',     () => openPopup('popup-settings'));
   setupButton('btn-home',     BASE + 'home_idle.png',     BASE + 'home_click.png',         () => window.location.href = 'inventory.html');
   setupButton('btn-quests',   BASE + 'quests_idle.png',   BASE + 'quests_click.png',       () => openPopup('popup-quests'));
@@ -71,42 +71,45 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Make floating items draggable
-  let draggedItem = null;
-  let dragOffset = { x: 0, y: 0 };
-
-  document.querySelectorAll('.draggable-item').forEach(item => {
-    item.addEventListener('mousedown', (e) => {
-      draggedItem = item;
-      const rect = item.getBoundingClientRect();
-      dragOffset.x = e.clientX - rect.left;
-      dragOffset.y = e.clientY - rect.top;
-      item.style.animation = 'none';
-      item.style.cursor = 'grabbing';
+  // Difficulty selection
+  document.querySelectorAll('.difficulty-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      playClickSound();
+      const difficulty = btn.dataset.difficulty;
+      window.location.href = `../index.html?autostart=1&difficulty=${difficulty}`;
     });
   });
 
+  // Make floating items bump away from cursor
+  let mouseX = 0;
+  let mouseY = 0;
+  const REPULSION_RADIUS = 120;
+  const REPULSION_FORCE = 30;
+
   document.addEventListener('mousemove', (e) => {
-    if (!draggedItem) return;
-    const menuContent = document.querySelector('.menu-content');
-    const rect = menuContent.getBoundingClientRect();
-    const x = e.clientX - rect.left - dragOffset.x;
-    const y = e.clientY - rect.top - dragOffset.y;
-    draggedItem.style.left = x + 'px';
-    draggedItem.style.top = y + 'px';
-    draggedItem.style.right = 'auto';
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+
+    document.querySelectorAll('.draggable-item').forEach(item => {
+      const rect = item.getBoundingClientRect();
+      const itemX = rect.left + rect.width / 2;
+      const itemY = rect.top + rect.height / 2;
+
+      const dx = itemX - mouseX;
+      const dy = itemY - mouseY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < REPULSION_RADIUS) {
+        const angle = Math.atan2(dy, dx);
+        const force = (REPULSION_RADIUS - distance) / REPULSION_RADIUS * REPULSION_FORCE;
+        const moveX = Math.cos(angle) * force;
+        const moveY = Math.sin(angle) * force;
+
+        item.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      } else {
+        item.style.transform = 'translate(0, 0)';
+      }
+    });
   });
 
-  document.addEventListener('mouseup', () => {
-    if (draggedItem) {
-      draggedItem.style.cursor = 'grab';
-      const animationName = draggedItem.className.includes('bird') ? 'bird-fly' :
-                           draggedItem.className.includes('bee') ? 'bee-buzz' :
-                           draggedItem.className.includes('leaf') ? 'leaf-fall' :
-                           draggedItem.className.includes('star') ? 'star-twirl' :
-                           draggedItem.className.includes('sparkle') ? 'sparkle-float' : 'flutter';
-      draggedItem.style.animation = `${animationName} var(--animation-duration, 4s) infinite ease-in-out`;
-      draggedItem = null;
-    }
-  });
 });
