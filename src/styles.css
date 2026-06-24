@@ -534,6 +534,136 @@ body {
   -webkit-user-drag: none;
 }
 
+/* ── Objective Screen ── */
+
+#objective-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 8, 32, 0.4);
+  z-index: 500;
+  backdrop-filter: blur(2px);
+}
+
+#objective-screen.hidden {
+  display: none;
+}
+
+.objective-card {
+  position: relative;
+  z-index: 10;
+  border: 3px solid #8b6f47;
+  border-radius: 28px;
+  padding: 48px 40px;
+  text-align: center;
+  color: #f5f0ff;
+  font-family: 'Fredoka', system-ui, sans-serif;
+  max-width: 380px;
+  width: 90%;
+  background: linear-gradient(135deg, #4a7a3a 0%, #3a5f2d 50%, #2d4620 100%);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6), inset 0 2px 0 rgba(255, 255, 255, 0.08), 0 0 40px rgba(74, 122, 58, 0.3);
+  animation: objective-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes objective-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.7) rotateX(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotateX(0deg);
+  }
+}
+
+#objective-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.7);
+  color: #c8e6c9;
+}
+
+.objective-content {
+  margin-bottom: 24px;
+}
+
+.objective-text {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffd77a;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.objective-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.2) 50%, transparent 100%);
+  margin: 20px 0;
+}
+
+.objective-rewards {
+  text-align: left;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reward-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(200, 230, 201, 0.2);
+}
+
+.reward-emoji {
+  font-size: 20px;
+  min-width: 24px;
+}
+
+.reward-label {
+  color: rgba(200, 230, 201, 0.8);
+  flex: 1;
+}
+
+.reward-amount {
+  color: #ffd77a;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.objective-btn {
+  width: 100%;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #ffd77a 0%, #ffcc5c 100%);
+  color: #2d4620;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 8px 20px rgba(255, 215, 122, 0.4);
+  font-family: 'Fredoka', system-ui, sans-serif;
+}
+
+.objective-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(255, 215, 122, 0.6);
+}
+
+.objective-btn:active {
+  transform: translateY(0);
+}
+
 /* ── App hidden state ── */
 #app.hidden {
   display: none;
