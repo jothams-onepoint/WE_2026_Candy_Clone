@@ -8,24 +8,45 @@
 
 body {
   min-height: 100vh;
-  background: linear-gradient(160deg, #3b1f6b 0%, #1e0d40 55%, #0d0820 100%);
+  background: none;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Fredoka', 'Comic Sans MS', sans-serif;
 }
 
+/* ── Responsive cell size: auto-fits to whichever dimension is tighter ── */
+:root {
+  --cell: clamp(48px,
+    min(calc((100vh - 140px) / 8), calc((100vw - 20px) / 8)),
+    88px);
+}
+
+#bg-canvas {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* Cover viewport while maintaining 16:9 – never compress */
+  width: max(100vw, calc(100vh * 16 / 9));
+  height: max(100vh, calc(100vw * 9 / 16));
+  z-index: -1;
+  pointer-events: none;
+  display: block;
+}
+
 #app {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: clamp(8px, 1.5vh, 20px);
 }
 
 #hud {
   display: flex;
-  gap: 48px;
+  gap: clamp(16px, 4vw, 48px);
   justify-content: center;
+  flex-wrap: wrap;
 }
 
 .hud-block {
@@ -36,47 +57,52 @@ body {
 }
 
 .hud-label {
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: clamp(0.7rem, 1.8vmin, 1rem);
+  font-weight: 900;
   letter-spacing: 0.26em;
   text-transform: uppercase;
-  color: rgba(245, 240, 255, 0.5);
+  color: rgba(245, 240, 255, 0.7);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 #score-display {
   font-family: 'Courier New', monospace;
-  font-size: 2.2rem;
-  font-weight: 700;
+  font-size: clamp(1.8rem, 5vh, 3rem);
+  font-weight: 900;
   color: #f0c040;
   letter-spacing: 0.04em;
-  min-width: 80px;
+  min-width: 120px;
   text-align: center;
+  text-shadow: 0 3px 8px rgba(240, 192, 64, 0.4);
 }
 
 #moves-display {
   font-family: 'Courier New', monospace;
-  font-size: 2.2rem;
-  font-weight: 700;
+  font-size: clamp(1.8rem, 5vh, 3rem);
+  font-weight: 900;
   color: #f5f0ff;
   letter-spacing: 0.04em;
-  min-width: 60px;
+  min-width: 100px;
   text-align: center;
   transition: color 0.3s;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 #moves-display.low {
   color: #c03040;
+  text-shadow: 0 3px 8px rgba(192, 48, 64, 0.4);
 }
 
 #timer-display {
   font-family: 'Courier New', monospace;
-  font-size: 2.2rem;
-  font-weight: 700;
+  font-size: clamp(1.8rem, 5vh, 3rem);
+  font-weight: 900;
   color: #f5f0ff;
   letter-spacing: 0.04em;
-  min-width: 60px;
+  min-width: 100px;
   text-align: center;
   transition: color 0.3s;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 #timer-display.low {
@@ -187,19 +213,46 @@ body {
   transform: scale(0.97);
 }
 
+/* ── Stopwatch (top-right, bigger) ── */
+#stopwatch-container {
+  position: fixed;
+  top: clamp(12px, 2vmin, 20px);
+  right: clamp(12px, 2vmin, 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(6px, 1.2vmin, 10px);
+  z-index: 100;
+}
+
+#stopwatch {
+  width: clamp(100px, 12vmin, 160px);
+  height: clamp(100px, 12vmin, 160px);
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.4));
+}
+
+#time-text {
+  font-family: 'Courier New', monospace;
+  font-size: clamp(16px, 3.5vmin, 26px);
+  font-weight: 900;
+  color: #f0c040;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.5), 0 0 12px rgba(240, 192, 64, 0.4);
+  letter-spacing: 0.04em;
+}
+
 #game-grid {
   display: grid;
-  grid-template-columns: repeat(8, 68px);
-  gap: 2px;
-  padding: 10px;
+  grid-template-columns: repeat(8, var(--cell));
+  gap: clamp(1px, 0.25vmin, 3px);
+  padding: clamp(5px, 1vmin, 10px);
   background: rgba(0, 0, 0, 0.25);
   border-radius: 14px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 .grid-cell {
-  width: 68px;
-  height: 68px;
+  width: var(--cell);
+  height: var(--cell);
   background: rgba(190, 190, 195, 0.28);
   border-radius: 9px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -363,7 +416,7 @@ body {
   z-index: 10;
   border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 22px;
-  padding: 52px 72px 56px;
+  padding: clamp(28px, 4vmin, 52px) clamp(36px, 5vmin, 72px) clamp(28px, 4vmin, 56px);
   text-align: center;
   color: #f5f0ff;
   font-family: system-ui, -apple-system, sans-serif;
@@ -392,11 +445,11 @@ body {
 }
 
 .es-eyebrow {
-  font-size: 0.7rem;
+  font-size: clamp(0.55rem, 1.3vmin, 0.7rem);
   font-weight: 700;
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  margin-bottom: 18px;
+  margin-bottom: clamp(10px, 1.5vmin, 18px);
   animation: es-text-in 0.45s ease 0.55s both;
 }
 .win-eyebrow  { color: #7af0b0; }
@@ -404,12 +457,12 @@ body {
 
 .es-headline {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 3.75rem;
+  font-size: clamp(2.5rem, 8vmin, 3.75rem);
   font-weight: normal;
   letter-spacing: 0.05em;
   color: #f5f0ff;
   line-height: 1;
-  margin-bottom: 36px;
+  margin-bottom: clamp(18px, 2.5vmin, 36px);
   animation: es-text-in 0.45s ease 0.65s both;
 }
 .loss-card .es-headline { animation-delay: 0.58s; }
@@ -418,8 +471,8 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 auto 32px;
-  width: 160px;
+  margin: 0 auto clamp(16px, 2.5vmin, 32px);
+  width: clamp(100px, 35vw, 160px);
   animation: es-text-in 0.45s ease 0.72s both;
 }
 .loss-card .es-rule { animation-delay: 0.65s; }
@@ -431,19 +484,19 @@ body {
 .loss-dot { background: #c03040; }
 
 .es-score-label {
-  font-size: 0.65rem;
+  font-size: clamp(0.5rem, 1.2vmin, 0.65rem);
   font-weight: 700;
   letter-spacing: 0.26em;
   text-transform: uppercase;
   color: rgba(245, 240, 255, 0.5);
-  margin-bottom: 6px;
+  margin-bottom: clamp(4px, 0.8vmin, 6px);
   animation: es-text-in 0.45s ease 0.78s both;
 }
 .loss-card .es-score-label { animation-delay: 0.71s; }
 
 .es-score-value {
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: 2.8rem;
+  font-size: clamp(1.8rem, 5.5vmin, 2.8rem);
   font-weight: normal;
   color: #f0c040;
   letter-spacing: 0.04em;
@@ -555,8 +608,8 @@ body {
   position: relative;
   z-index: 10;
   border: 3px solid #8b6f47;
-  border-radius: 28px;
-  padding: 48px 40px;
+  border-radius: clamp(16px, 4vmin, 28px);
+  padding: clamp(24px, 3.5vmin, 48px) clamp(20px, 3vmin, 40px);
   text-align: center;
   color: #f5f0ff;
   font-family: 'Fredoka', system-ui, sans-serif;
@@ -579,22 +632,22 @@ body {
 }
 
 #objective-title {
-  font-size: 28px;
+  font-size: clamp(20px, 5vmin, 28px);
   font-weight: 700;
-  margin-bottom: 24px;
+  margin-bottom: clamp(12px, 2vmin, 24px);
   text-shadow: 0 3px 8px rgba(0, 0, 0, 0.7);
   color: #c8e6c9;
 }
 
 .objective-content {
-  margin-bottom: 24px;
+  margin-bottom: clamp(12px, 2vmin, 24px);
 }
 
 .objective-text {
-  font-size: 20px;
+  font-size: clamp(15px, 3.5vmin, 20px);
   font-weight: 700;
   color: #ffd77a;
-  margin-bottom: 20px;
+  margin-bottom: clamp(10px, 1.5vmin, 20px);
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 
@@ -615,17 +668,17 @@ body {
 .reward-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 14px;
+  gap: clamp(6px, 1vmin, 10px);
+  font-size: clamp(12px, 2.2vmin, 14px);
   font-weight: 600;
-  padding: 12px;
+  padding: clamp(8px, 1.2vmin, 12px);
   background: rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   border: 1px solid rgba(200, 230, 201, 0.2);
 }
 
 .reward-emoji {
-  font-size: 20px;
+  font-size: clamp(16px, 2.8vmin, 20px);
   min-width: 24px;
 }
 
@@ -637,17 +690,17 @@ body {
 .reward-amount {
   color: #ffd77a;
   font-weight: 700;
-  font-size: 15px;
+  font-size: clamp(13px, 2.4vmin, 15px);
 }
 
 .objective-btn {
   width: 100%;
-  padding: 14px 28px;
+  padding: clamp(10px, 1.5vmin, 14px) clamp(18px, 3vmin, 28px);
   background: linear-gradient(135deg, #ffd77a 0%, #ffcc5c 100%);
   color: #2d4620;
   border: none;
   border-radius: 12px;
-  font-size: 16px;
+  font-size: clamp(14px, 3vmin, 16px);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
@@ -673,9 +726,6 @@ body {
 #main-menu {
   position: fixed;
   inset: 0;
-  background-image: url('../assets/menu_bg.jpg');
-  background-size: cover;
-  background-position: center;
   z-index: 200;
 }
 
@@ -715,7 +765,43 @@ body {
 }
 
 .menu-bottom-icon {
-  height: 88px;
+  height: clamp(52px, 11vmin, 88px);
   width: auto;
   cursor: pointer;
+}
+
+/* ── Menu: landscape layout ── */
+@media (orientation: landscape) {
+  #menu-play {
+    width: auto;
+    height: clamp(90px, 44vh, 260px);
+    bottom: clamp(60px, 15vh, 100px);
+  }
+  #menu-settings {
+    height: clamp(44px, 7vh, 70px);
+  }
+  .menu-bottom-icon {
+    height: clamp(44px, 9vh, 70px);
+  }
+  #menu-bottom-bar {
+    gap: 16px;
+    padding-bottom: clamp(6px, 1.5vh, 16px);
+  }
+}
+
+/* ── Menu: portrait layout (keeps original proportions) ── */
+@media (orientation: portrait) {
+  #menu-play {
+    width: clamp(180px, 60vw, 340px);
+    height: auto;
+    bottom: clamp(12%, 18vh, 22%);
+  }
+}
+
+/* ── Game: re-center grid on portrait screens ── */
+@media (orientation: portrait) {
+  #app {
+    justify-content: center;
+    min-height: 100vh;
+  }
 }

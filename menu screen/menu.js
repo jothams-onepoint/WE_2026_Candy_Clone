@@ -47,6 +47,39 @@ function closePopup(popupId) {
   if (popup) popup.classList.remove('visible');
 }
 
+function updateLevelDisplay() {
+  const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
+  const levelWinsKey = `levelWins_${currentLevel}`;
+  const currentLevelWins = parseInt(localStorage.getItem(levelWinsKey) || '0');
+  const winsPerLevel = 3;
+
+  const levelDisplay = document.getElementById('level-number-display');
+  if (levelDisplay) levelDisplay.textContent = String(currentLevel);
+
+  const progressPercent = Math.min(100, (currentLevelWins / winsPerLevel) * 100);
+  const progressFill = document.getElementById('level-progress-fill');
+  if (progressFill) {
+    progressFill.style.width = progressPercent + '%';
+  }
+}
+
+function updateLevelPopup() {
+  const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
+  const levelWinsKey = `levelWins_${currentLevel}`;
+  const currentLevelWins = parseInt(localStorage.getItem(levelWinsKey) || '0');
+  const winsPerLevel = 3;
+
+  document.getElementById('level-popup-number').textContent = String(currentLevel);
+  document.getElementById('level-popup-wins').textContent = String(currentLevelWins);
+  document.getElementById('level-popup-next').textContent = String(currentLevel + 1);
+
+  const progressPercent = Math.min(100, (currentLevelWins / winsPerLevel) * 100);
+  const progressBar = document.getElementById('level-popup-progress');
+  if (progressBar) {
+    progressBar.style.width = progressPercent + '%';
+  }
+}
+
 const QUESTS = {
   easy: [
     { id: 'win1', name: 'First Victory', desc: 'Win 1 game', target: 1, reward: 50 },
@@ -139,10 +172,52 @@ function updateLevelInfo() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize animated background
+  if (window.BgSystem) {
+    window.BgSystem.init();
+    window.BgSystem.start(0); // lush meadow
+  }
+
+  // Upper zone: fast insects, doves, feathers, floating leaves
+  const upperTypes = ['🐝','🦗','🐝','🦗','🕊️','🪶','🌿','🐝','🦗','🐝','🦗','🕊️','🪶','🌿','🐝'];
+  const upperClass = {'🐝':'bee','🦗':'bee','🕊️':'petal','🪶':'petal','🌿':'petal'};
+  for (let i = 0; i < upperTypes.length; i++) {
+    const p = document.createElement('div');
+    const type = upperTypes[i];
+    p.className = `particle-upper ${upperClass[type] || 'bee'}`;
+    p.textContent = type;
+    p.style.left = (i / upperTypes.length * 92 + Math.random() * 6) + 'vw';
+    p.style.top = (Math.random() * 38) + 'vh';
+    p.style.setProperty('--seed', i);
+    document.body.appendChild(p);
+  }
+
+  // Lower zone: ground insects, leaves, seedlings, rocks
+  const lowerTypes = ['🍃','🐛','🪲','🐌','🌿','🐜','🍃','🐛','🪲','🐌','🌱','🐜','🕷️','🪨','🍃','🐛','🐜','🌱'];
+  const lowerClass = {'🍃':'leaf','🐛':'beetle','🪲':'beetle','🐌':'snail','🌿':'leaf','🐜':'beetle','🌱':'leaf','🕷️':'beetle','🪨':'leaf'};
+  for (let i = 0; i < lowerTypes.length; i++) {
+    const p = document.createElement('div');
+    const type = lowerTypes[i];
+    p.className = `particle-lower ${lowerClass[type] || 'leaf'}`;
+    p.textContent = type;
+    p.style.left = (i / lowerTypes.length * 92 + Math.random() * 6) + 'vw';
+    p.style.top = (72 + Math.random() * 22) + 'vh';
+    p.style.setProperty('--seed', i);
+    document.body.appendChild(p);
+  }
+
   renderQuests();
-  const level = parseInt(localStorage.getItem('candyLevel') || '1');
-  const levelEl = document.getElementById('level-number');
-  if (levelEl) levelEl.textContent = String(level);
+  updateLevelDisplay();
+
+  // Level info display click handler
+  document.getElementById('level-info-display')?.addEventListener('click', () => {
+    openPopup('popup-level-info');
+    updateLevelPopup();
+  });
+
+  document.getElementById('popup-level-info')?.addEventListener('click', (e) => {
+    if (e.target.id === 'popup-level-info') closePopup('popup-level-info');
+  });
 
   const levelDisplay = document.getElementById('level-display');
   if (levelDisplay) {
@@ -156,7 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target.id === 'popup-level') closePopup('popup-level');
   });
 
-  setupButton('btn-play',     BASE + 'play_idle.png',     null,                            () => openPopup('popup-difficulty'));
+  // New animated play button
+  document.getElementById('btn-play')?.addEventListener('click', () => {
+    playClickSound();
+    openPopup('popup-difficulty');
+  });
   setupButton('btn-settings', BASE + 'settings_idle.png', null,                            () => openPopup('popup-settings'));
   setupButton('btn-home',     BASE + 'home_idle.png',     null,                            () => window.location.href = 'inventory.html');
   setupButton('btn-quests',   BASE + 'quests_idle.png',   null,                            () => { renderQuests(); openPopup('popup-quests'); });
@@ -185,38 +264,6 @@ document.addEventListener('DOMContentLoaded', () => {
       playClickSound();
       const difficulty = btn.dataset.difficulty;
       window.location.href = `../index.html?autostart=1&difficulty=${difficulty}`;
-    });
-  });
-
-  // Make floating items bump away from cursor
-  let mouseX = 0;
-  let mouseY = 0;
-  const REPULSION_RADIUS = 120;
-  const REPULSION_FORCE = 30;
-
-  document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-
-    document.querySelectorAll('.draggable-item').forEach(item => {
-      const rect = item.getBoundingClientRect();
-      const itemX = rect.left + rect.width / 2;
-      const itemY = rect.top + rect.height / 2;
-
-      const dx = itemX - mouseX;
-      const dy = itemY - mouseY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      if (distance < REPULSION_RADIUS) {
-        const angle = Math.atan2(dy, dx);
-        const force = (REPULSION_RADIUS - distance) / REPULSION_RADIUS * REPULSION_FORCE;
-        const moveX = Math.cos(angle) * force;
-        const moveY = Math.sin(angle) * force;
-
-        item.style.transform = `translate(${moveX}px, ${moveY}px)`;
-      } else {
-        item.style.transform = 'translate(0, 0)';
-      }
     });
   });
 

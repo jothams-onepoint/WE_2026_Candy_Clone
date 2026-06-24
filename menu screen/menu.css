@@ -7,11 +7,31 @@
   font-family: 'Fredoka', 'Comic Sans MS', sans-serif;
 }
 
+:root {
+  --btn-settings: clamp(56px, 11vmin, 72px);
+  --btn-icon: clamp(80px, 13vmin, 110px);
+  --btn-spacing: clamp(12px, 2vmin, 20px);
+  --icon-gap: clamp(16px, 2.5vmin, 28px);
+}
+
 html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
   background: #000;
+}
+
+#bg-canvas {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* Cover viewport while maintaining 16:9 — never compress */
+  width: max(100vw, calc(100vh * 16 / 9));
+  height: max(100vh, calc(100vw * 9 / 16));
+  z-index: 0;
+  pointer-events: none;
+  display: block;
 }
 
 #menu-screen {
@@ -21,15 +41,15 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(90deg, #2d5016 0%, #3d7a2c 20%, #4a9d52 50%, #3d7a2c 80%, #2d5016 100%);
+  z-index: 1;
 }
 
 .menu-content {
-  position: relative;
-  width: min(100vw, 56.25vh);
-  height: min(100vh, 177.78vw);
-  background: url('../assets/backgrounds/bg_lush_meadow.png') center / contain no-repeat;
-  box-shadow: 0 0 60px rgba(0, 0, 0, 0.4);
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 2;
 }
 
 /* ── Shared button styles ── */
@@ -56,32 +76,100 @@ html, body {
 /* ── Settings – top-right ── */
 
 #btn-settings {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  width: 64px;
-  height: 64px;
+  position: fixed;
+  top: clamp(12px, 2vmin, 20px);
+  right: clamp(12px, 2vmin, 20px);
+  width: var(--btn-settings);
+  height: var(--btn-settings);
   object-fit: contain;
+  z-index: 10;
 }
 
 /* ── Play – centred ── */
 
 #play-container {
-  position: absolute;
+  position: fixed;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  z-index: 10;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── New Animated Play Button ── */
+.play-btn-new {
+  width: clamp(240px, 50vmin, 360px);
+  height: clamp(240px, 50vmin, 360px);
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: playBounce 2s ease-in-out infinite;
+  transition: filter 0.3s ease;
+}
+
+.play-btn-new:hover {
+  filter: drop-shadow(0 8px 24px rgba(122, 240, 176, 0.6));
+}
+
+.play-btn-new:active {
+  animation: none;
+  transform: scale(0.95);
+}
+
+.play-btn-circle {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 12px rgba(74, 157, 82, 0.3));
+}
+
+.play-pulse {
+  animation: playPulse 2s ease-in-out infinite;
+}
+
+.play-triangle {
+  animation: playTrianglePulse 2s ease-in-out infinite;
+  transform-origin: 60px 60px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2));
+}
+
+@keyframes playBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(clamp(-8px, -3vmin, -20px)); }
+}
+
+@keyframes playPulse {
+  0%, 100% { r: 55; opacity: 1; }
+  50% { r: 58; opacity: 0.9; }
+}
+
+@keyframes playTrianglePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 #btn-play {
-  width: clamp(300px, 90%, 600px);
+  width: clamp(320px, 85%, 620px);
   height: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 #level-display {
+  position: relative;
+  left: 0;
   text-align: center;
-  margin-top: 10px;
-  font-size: clamp(20px, 5vw, 32px);
+  margin-top: clamp(6px, 1vmin, 10px);
+  margin-left: auto;
+  margin-right: auto;
+  font-size: clamp(18px, 4.5vw, 32px);
   font-weight: 700;
   color: #fff;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 210, 60, 0.7);
@@ -90,8 +178,9 @@ html, body {
   cursor: pointer;
   pointer-events: auto;
   transition: transform 0.08s ease, filter 0.08s ease;
-  padding: 4px 12px;
+  padding: clamp(3px, 0.5vmin, 4px) clamp(8px, 1.5vmin, 12px);
   border-radius: 8px;
+  white-space: nowrap;
 }
 
 #level-display:hover {
@@ -103,57 +192,97 @@ html, body {
   transform: translateY(0);
 }
 
-/* ── Side buttons – Quests · Home · Shop (all left) ── */
+/* ── Level Info Display (top-left) ── */
+#level-info-display {
+  position: fixed;
+  top: clamp(12px, 2vmin, 20px);
+  left: clamp(12px, 2vmin, 20px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.8vmin, 8px);
+  z-index: 10;
+  cursor: pointer;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+#level-info-display:hover {
+  transform: translateY(-2px);
+  filter: drop-shadow(0 4px 12px rgba(122, 240, 176, 0.4));
+}
+
+.level-info-header {
+  font-size: clamp(10px, 1.5vmin, 13px);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+#level-number-display {
+  font-family: 'Courier New', monospace;
+  font-size: clamp(24px, 5vmin, 40px);
+  font-weight: 900;
+  color: #7af0b0;
+  text-shadow: 0 0 12px rgba(122, 240, 176, 0.5);
+  line-height: 1;
+}
+
+#level-progress-bar-container {
+  width: clamp(120px, 15vw, 200px);
+}
+
+#level-progress-bar {
+  width: 100%;
+  height: clamp(4px, 0.8vmin, 7px);
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  border: 1px solid rgba(122, 240, 176, 0.3);
+  overflow: hidden;
+}
+
+#level-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7af0b0 0%, #4a9d52 100%);
+  width: 0%;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 6px rgba(122, 240, 176, 0.4);
+}
+
+/* ── Side buttons – Quests · Home · Shop (far left) ── */
 
 .icon-btn {
-  position: absolute;
-  width: 120px;
-  height: 120px;
+  position: fixed;
+  width: var(--btn-icon);
+  height: var(--btn-icon);
   object-fit: contain;
+  z-index: 10;
+  left: clamp(12px, 2vmin, 20px);
 }
 
-#btn-quests {
-  left: 16px;
-  top: 50%;
-  transform: translateY(-180px);
-}
-
+/* Home/inventory centred on the short axis; quest above, shop below */
 #btn-home {
-  left: 16px;
   top: 50%;
   transform: translateY(-50%);
 }
 
+#btn-quests {
+  top: calc(50% - var(--btn-icon) - var(--icon-gap));
+  transform: translateY(-50%);
+}
+
 #btn-shop {
-  left: 16px;
-  top: 50%;
-  transform: translateY(80px);
+  top: calc(50% + var(--btn-icon) + var(--icon-gap));
+  transform: translateY(-50%);
 }
 
-/* ── Floating elements ── */
-
+/* ── Floating elements (hidden) ── */
 .float-item {
-  position: absolute;
-  opacity: 0.7;
-  z-index: 1;
-}
-
-.float-item:not(.draggable-item) {
-  pointer-events: none;
-}
-
-.draggable-item {
-  cursor: grab;
-  pointer-events: auto;
-}
-
-.draggable-item:active {
-  cursor: grabbing;
+  display: none !important;
 }
 
 .float-item.cloud {
-  width: 80px;
-  height: 40px;
+  width: clamp(60px, 8vmin, 80px);
+  height: clamp(30px, 4vmin, 40px);
   background: rgba(255, 255, 255, 0.8);
   border-radius: 40px;
   box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.1);
@@ -169,40 +298,40 @@ html, body {
 }
 
 .float-item.cloud::before {
-  width: 50px;
-  height: 50px;
-  top: -25px;
-  left: 10px;
+  width: clamp(35px, 5vmin, 50px);
+  height: clamp(35px, 5vmin, 50px);
+  top: clamp(-15px, -2.5vmin, -25px);
+  left: clamp(8px, 1vmin, 10px);
 }
 
 .float-item.cloud::after {
-  width: 40px;
-  height: 40px;
-  top: -20px;
-  right: 10px;
+  width: clamp(30px, 4vmin, 40px);
+  height: clamp(30px, 4vmin, 40px);
+  top: clamp(-12px, -2vmin, -20px);
+  right: clamp(8px, 1vmin, 10px);
 }
 
 .float-item.butterfly {
-  width: 40px;
-  height: 40px;
+  width: clamp(30px, 4vmin, 40px);
+  height: clamp(30px, 4vmin, 40px);
   animation: flutter 3s infinite ease-in-out;
 }
 
 .float-item.butterfly::before {
   content: '🦋';
-  font-size: 30px;
+  font-size: clamp(24px, 3vmin, 30px);
   display: block;
 }
 
 .float-item.sparkle {
-  width: 20px;
-  height: 20px;
+  width: clamp(15px, 2vmin, 20px);
+  height: clamp(15px, 2vmin, 20px);
   animation: sparkle-float 4s infinite ease-in-out;
 }
 
 .float-item.sparkle::before {
   content: '✨';
-  font-size: 20px;
+  font-size: clamp(15px, 2vmin, 20px);
   display: block;
   animation: twinkle 1s infinite;
 }
@@ -245,7 +374,7 @@ html, body {
 
 .float-item.bird::before {
   content: '🐦';
-  font-size: 28px;
+  font-size: clamp(22px, 3.5vmin, 28px);
 }
 
 .float-item.flower {
@@ -254,7 +383,7 @@ html, body {
 
 .float-item.flower::before {
   content: '🌸';
-  font-size: 32px;
+  font-size: clamp(26px, 4vmin, 32px);
 }
 
 .float-item.star {
@@ -263,7 +392,7 @@ html, body {
 
 .float-item.star::before {
   content: '⭐';
-  font-size: 24px;
+  font-size: clamp(20px, 3vmin, 24px);
   animation: twinkle 1.5s infinite;
 }
 
@@ -273,7 +402,7 @@ html, body {
 
 .float-item.leaf::before {
   content: '🍃';
-  font-size: 26px;
+  font-size: clamp(21px, 3.3vmin, 26px);
 }
 
 .float-item.bee {
@@ -282,7 +411,7 @@ html, body {
 
 .float-item.bee::before {
   content: '🐝';
-  font-size: 24px;
+  font-size: clamp(20px, 3vmin, 24px);
 }
 
 @keyframes bird-fly {
@@ -372,8 +501,8 @@ html, body {
   background: #fef9f0;
   border: 4px solid #2d7a3e;
   border-radius: 12px;
-  padding: 28px;
-  max-width: 90%;
+  padding: clamp(16px, 3vmin, 28px);
+  max-width: min(95vw, 580px);
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.5);
@@ -382,22 +511,22 @@ html, body {
 
 .popup-content h2 {
   color: #1a1a1a;
-  margin-bottom: 20px;
-  font-size: 28px;
+  margin-bottom: clamp(12px, 2vmin, 20px);
+  font-size: clamp(22px, 5vmin, 28px);
   text-align: center;
   font-weight: 700;
   letter-spacing: 1px;
 }
 
 .popup-body {
-  margin-bottom: 16px;
-  min-width: 280px;
+  margin-bottom: clamp(10px, 1.5vmin, 16px);
+  min-width: clamp(320px, 85vw, 500px);
 }
 
 .quest-item {
   color: #333;
-  margin-bottom: 14px;
-  padding: 14px;
+  margin-bottom: clamp(10px, 1.5vmin, 14px);
+  padding: clamp(10px, 1.5vmin, 14px);
   background: #fff;
   border: 3px solid #2d7a3e;
   border-radius: 8px;
@@ -412,21 +541,21 @@ html, body {
 
 .quest-item h3 {
   color: #1e5a2c;
-  margin: 0 0 6px 0;
-  font-size: 16px;
+  margin: 0 0 clamp(3px, 0.5vmin, 6px) 0;
+  font-size: clamp(14px, 2.5vmin, 16px);
   font-weight: 700;
 }
 
 .quest-item p {
   margin: 0;
-  font-size: 13px;
+  font-size: clamp(11px, 1.8vmin, 13px);
   color: #666;
 }
 
 .setting-item {
   color: #333;
-  margin-bottom: 12px;
-  padding: 12px 14px;
+  margin-bottom: clamp(8px, 1.2vmin, 12px);
+  padding: clamp(10px, 1.5vmin, 14px);
   background: #fff;
   border: 3px solid #1e5a8a;
   border-radius: 8px;
@@ -438,13 +567,13 @@ html, body {
 
 .setting-item label {
   font-weight: 700;
-  font-size: 15px;
+  font-size: clamp(13px, 2.3vmin, 15px);
   letter-spacing: 0.5px;
 }
 
 .setting-item input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
+  width: clamp(16px, 2vmin, 20px);
+  height: clamp(16px, 2vmin, 20px);
   cursor: pointer;
   accent-color: #2d7a3e;
 }
@@ -455,12 +584,12 @@ html, body {
 
 .popup-close {
   width: 100%;
-  padding: 14px;
+  padding: clamp(10px, 1.5vmin, 14px);
   background: linear-gradient(135deg, #2d7a3e 0%, #1e5a2c 100%);
   color: #fff;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: clamp(14px, 2.5vmin, 16px);
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
@@ -494,20 +623,20 @@ html, body {
 /* Difficulty Modal */
 
 .difficulty-modal {
-  min-width: 320px;
+  min-width: clamp(260px, 70vw, 320px);
 }
 
 .difficulty-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: clamp(8px, 1.3vmin, 12px);
 }
 
 .difficulty-btn {
   background: #fff;
   border: 3px solid #333;
   border-radius: 12px;
-  padding: 16px;
+  padding: clamp(12px, 1.8vmin, 16px);
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
@@ -525,20 +654,20 @@ html, body {
 }
 
 .difficulty-emoji {
-  font-size: 40px;
-  margin-bottom: 8px;
+  font-size: clamp(32px, 5vmin, 40px);
+  margin-bottom: clamp(6px, 1vmin, 8px);
 }
 
 .difficulty-name {
   color: #333;
-  font-size: 18px;
+  font-size: clamp(16px, 3vmin, 18px);
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: clamp(3px, 0.5vmin, 4px);
 }
 
 .difficulty-time {
   color: #666;
-  font-size: 14px;
+  font-size: clamp(12px, 2vmin, 14px);
   font-weight: 600;
 }
 
@@ -656,4 +785,85 @@ html, body {
 .quest-completed .quest-progress-fill {
   background: linear-gradient(90deg, #7af0b0 0%, #5ed9a0 100%);
   width: 100% !important;
+}
+
+/* ── New Particles System ── */
+
+/* Upper particles (flying insects, butterflies) */
+.particle-upper {
+  position: fixed;
+  z-index: 1;
+  font-size: clamp(20px, 4vmin, 32px);
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.particle-upper.bee {
+  animation: bee-oscillate calc(2.2s + (var(--seed, 0) * 0.3s)) infinite ease-in-out;
+}
+
+.particle-upper.petal {
+  animation: petal-drift calc(6s + (var(--seed, 0) * 1.2s)) infinite ease-in-out;
+}
+
+.particle-lower.snail {
+  animation: snail-oscillate calc(8s + (var(--seed, 0) * 2s)) infinite ease-in-out;
+}
+
+/* Lower particles (flowers, ground insects) */
+.particle-lower {
+  position: fixed;
+  z-index: 1;
+  font-size: clamp(18px, 3.5vmin, 28px);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.particle-lower.leaf {
+  animation: leaf-oscillate calc(5.5s + (var(--seed, 0) * 1.2s)) infinite ease-in-out;
+}
+
+.particle-lower.beetle {
+  animation: beetle-oscillate calc(6.5s + (var(--seed, 0) * 1.3s)) infinite ease-in-out;
+}
+
+.particle-lower.snail {
+  animation: snail-oscillate calc(9s + (var(--seed, 0) * 2.5s)) infinite ease-in-out;
+}
+
+/* Animations */
+@keyframes bee-oscillate {
+  0%, 100% { transform: translateX(0) translateY(0) scaleX(1); }
+  15% { transform: translateX(32px) translateY(-20px) scaleX(1); }
+  30% { transform: translateX(18px) translateY(8px) scaleX(1); }
+  50% { transform: translateX(0) translateY(0) scaleX(1); }
+  70% { transform: translateX(-32px) translateY(-18px) scaleX(-1); }
+  85% { transform: translateX(-16px) translateY(10px) scaleX(-1); }
+}
+
+
+@keyframes leaf-oscillate {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+  25% { transform: translateX(20px) translateY(-3px) rotate(-12deg); }
+  50% { transform: translateX(0) translateY(0) rotate(0deg); }
+  75% { transform: translateX(-20px) translateY(-2px) rotate(12deg); }
+}
+
+@keyframes beetle-oscillate {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(8px) translateY(-2px); }
+  50% { transform: translateX(0) translateY(0); }
+  75% { transform: translateX(-8px) translateY(-2px); }
+}
+
+@keyframes petal-drift {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+  25% { transform: translateX(22px) translateY(-18px) rotate(20deg); }
+  50% { transform: translateX(8px) translateY(6px) rotate(-5deg); }
+  75% { transform: translateX(-22px) translateY(-12px) rotate(-20deg); }
+}
+
+@keyframes snail-oscillate {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  50% { transform: translateX(6px) translateY(-1px); }
 }

@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
+  <canvas id="bg-canvas"></canvas>
+
   <!-- Main Menu -->
   <div id="main-menu">
     <img id="menu-settings" src="assets/menu elements/settings.png" alt="Settings">
@@ -43,6 +45,26 @@
   </div>
 
   <div id="app" class="hidden">
+    <div id="stopwatch-container">
+      <svg id="stopwatch" viewBox="0 0 100 100" width="120" height="120">
+        <circle cx="50" cy="50" r="48" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+        <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+        <!-- Minute markers -->
+        <g id="minute-markers" stroke="rgba(255,255,255,0.4)" stroke-width="1">
+          <line x1="50" y1="6" x2="50" y2="10"/>
+          <line x1="50" y1="90" x2="50" y2="94"/>
+          <line x1="6" y1="50" x2="10" y2="50"/>
+          <line x1="90" y1="50" x2="94" y2="50"/>
+        </g>
+        <!-- Minute hand -->
+        <line id="minute-hand" x1="50" y1="50" x2="50" y2="18" stroke="#f0c040" stroke-width="3" stroke-linecap="round"/>
+        <!-- Second hand -->
+        <line id="second-hand" x1="50" y1="50" x2="50" y2="14" stroke="#7af0b0" stroke-width="2" stroke-linecap="round"/>
+        <!-- Center dot -->
+        <circle cx="50" cy="50" r="3" fill="#f0c040"/>
+      </svg>
+      <div id="time-text">2:00</div>
+    </div>
     <div id="hud">
       <div class="hud-block">
         <span class="hud-label">SCORE</span>
@@ -119,6 +141,7 @@
     </div>
   </div>
 
+  <script src="dist/backgrounds.js"></script>
   <script src="dist/game.js"></script>
 </body>
 </html>

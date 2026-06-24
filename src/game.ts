@@ -29,6 +29,7 @@ let savedGoldGrid: boolean[][] = [];
 let savedIconSet: IconSet = 'tile_icons_red';
 let savedMoveCap = 0;
 let savedBackground = '';
+let savedBgIndex = 0;
 
 const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
@@ -125,6 +126,25 @@ function updateTimerDisplay(): void {
   if (!el) return;
   el.textContent = String(timeLeft);
   el.classList.toggle('low', timeLeft <= 10);
+  updateStopwatch();
+}
+
+function updateStopwatch(): void {
+  const minuteHand = document.getElementById('minute-hand');
+  const secondHand = document.getElementById('second-hand');
+  const timeText = document.getElementById('time-text');
+  if (!minuteHand || !secondHand || !timeText) return;
+
+  const mins = Math.floor(timeLeft / 60);
+  const secs = timeLeft % 60;
+  timeText.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+  // Calculate rotation angles (SVG starts at 12 o'clock, rotates clockwise)
+  const secondAngle = (secs / 60) * 360;
+  const minuteAngle = ((mins % 60) / 60) * 360 + (secs / 60) * (360 / 60);
+
+  minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
+  secondHand.style.transform = `rotate(${secondAngle}deg)`;
 }
 
 function show10SecondWarning(): void {
@@ -508,17 +528,32 @@ function showWinScreen(): void {
 }
 
 function applyRandomBackground(): string {
-  const bg = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
-  document.body.style.backgroundImage = `url('${bg}')`;
-  document.body.style.backgroundSize = 'cover';
-  document.body.style.backgroundPosition = 'center';
-  return bg;
+  const bgSys = (window as any).BgSystem;
+  const bgIdx = Math.floor(Math.random() * (bgSys ? bgSys.count() : BACKGROUNDS.length));
+  savedBgIndex = bgIdx;
+  if (bgSys) {
+    bgSys.start(bgIdx);
+    document.body.style.backgroundImage = '';
+  } else {
+    const bg = BACKGROUNDS[bgIdx % BACKGROUNDS.length];
+    document.body.style.backgroundImage = `url('${bg}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+    return bg;
+  }
+  return BACKGROUNDS[bgIdx % BACKGROUNDS.length];
 }
 
 function applyBackground(bg: string): void {
-  document.body.style.backgroundImage = `url('${bg}')`;
-  document.body.style.backgroundSize = 'cover';
-  document.body.style.backgroundPosition = 'center';
+  const bgSys = (window as any).BgSystem;
+  if (bgSys) {
+    bgSys.start(savedBgIndex);
+    document.body.style.backgroundImage = '';
+  } else {
+    document.body.style.backgroundImage = `url('${bg}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundPosition = 'center';
+  }
 }
 
 function showObjectiveScreen(difficulty: string): void {
@@ -649,6 +684,12 @@ function setupDragHandlers(): void {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize animated background
+  if (window.BgSystem) {
+    window.BgSystem.init();
+    window.BgSystem.start(0); // lush meadow
+  }
+
   const params = new URLSearchParams(window.location.search);
   const autostart = params.has('autostart');
   const difficulty = params.get('difficulty') || 'medium';

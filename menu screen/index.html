@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="menu.css">
 </head>
 <body>
+  <canvas id="bg-canvas"></canvas>
   <div id="menu-screen">
     <div class="menu-content">
 
@@ -38,12 +39,45 @@
       <div class="float-item cloud" style="top: 70%; right: 15%; animation-delay: 3s; animation-duration: 20s;"></div>
       <div class="float-item cloud" style="top: 40%; right: 5%; animation-delay: 6s; animation-duration: 25s;"></div>
 
+      <!-- Level display + progress – top-left -->
+      <div id="level-info-display">
+        <div class="level-info-header">LEVEL</div>
+        <div id="level-number-display">1</div>
+        <div id="level-progress-bar-container">
+          <div id="level-progress-bar">
+            <div id="level-progress-fill"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Settings – top-right -->
       <img id="btn-settings" class="menu-btn" draggable="false" alt="Settings">
 
       <!-- Play – centred -->
       <div id="play-container">
-        <img id="btn-play" class="menu-btn" draggable="false" alt="Play">
+        <button id="btn-play" class="play-btn-new" aria-label="Play">
+          <svg viewBox="0 0 120 120" class="play-btn-circle">
+            <defs>
+              <radialGradient id="playGradient" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" style="stop-color:#7af0b0;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#4a9d52;stop-opacity:1" />
+              </radialGradient>
+              <filter id="playGlow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            <!-- Pulsing background circle -->
+            <circle cx="60" cy="60" r="55" fill="url(#playGradient)" class="play-pulse"/>
+            <!-- Decorative ring -->
+            <circle cx="60" cy="60" r="55" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2"/>
+            <!-- Play triangle -->
+            <polygon points="50,35 50,85 85,60" fill="#fff" class="play-triangle"/>
+          </svg>
+        </button>
         <div id="level-display">Level <span id="level-number">1</span></div>
       </div>
 
@@ -134,6 +168,28 @@
     </div>
   </div>
 
+  <!-- Level Info Popup -->
+  <div id="popup-level-info" class="popup">
+    <div class="popup-content">
+      <h2>📊 LEVEL PROGRESS</h2>
+      <div class="popup-body">
+        <div style="text-align: center; padding: 20px 0;">
+          <div style="font-size: clamp(36px, 6vmin, 56px); font-weight: 900; color: #7af0b0; margin-bottom: 12px; text-shadow: 0 0 16px rgba(122, 240, 176, 0.5);" id="level-popup-number">1</div>
+          <div style="font-size: clamp(14px, 2.5vmin, 18px); color: #666; margin-bottom: 24px;">Current Level</div>
+          <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 16px;">
+            <div id="level-popup-progress" style="height: 100%; background: linear-gradient(90deg, #7af0b0 0%, #4a9d52 100%); width: 0%; transition: width 0.3s ease;"></div>
+          </div>
+          <div style="font-size: clamp(13px, 2.3vmin, 16px); font-weight: 700; color: #333; margin-bottom: 8px;">
+            <span id="level-popup-wins">0</span>/3 wins until Level <span id="level-popup-next">2</span>
+          </div>
+          <div style="font-size: 12px; color: #999; font-style: italic;">Click Play to win games and level up!</div>
+        </div>
+      </div>
+      <button class="popup-close">✕ CLOSE</button>
+    </div>
+  </div>
+
+  <script src="../dist/backgrounds.js"></script>
   <script src="menu.js"></script>
 </body>
 </html>

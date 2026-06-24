@@ -7,373 +7,292 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Fredoka', 'Comic Sans MS', sans-serif;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Fredoka', 'Comic Sans MS', sans-serif; }
 
     html, body {
       width: 100%;
       height: 100%;
+      overflow: hidden;
       background: #000;
     }
 
     #inventory-screen {
-      position: relative;
       width: 100vw;
       height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(90deg, #2d5016 0%, #3d7a2c 20%, #4a9d52 50%, #3d7a2c 80%, #2d5016 100%);
-    }
-
-    .inventory-content {
-      position: relative;
-      width: min(100vw, 56.25vh);
-      height: min(100vh, 177.78vw);
-      background: linear-gradient(to bottom, #2d5016 0%, #3d7a2c 50%, #4a9d52 100%);
-      display: flex;
       flex-direction: column;
-      align-items: stretch;
-      justify-content: flex-start;
-      gap: 0;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 0;
+      background: linear-gradient(135deg, #2d5016 0%, #4a9d52 100%);
     }
 
+    /* ── Header ── */
     .inv-header {
-      background: linear-gradient(to bottom, #1a3a0c 0%, #2d5016 100%);
-      padding: 16px;
-      text-align: center;
-      border-bottom: 3px solid #0a1a00;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
-      z-index: 10;
-      position: sticky;
-      top: 0;
-    }
-
-    h1 {
-      color: #fff;
-      font-size: 28px;
-      font-weight: 700;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
-    }
-
-    .float-item {
-      position: absolute;
-      pointer-events: none;
-      opacity: 0.4;
-      z-index: 1;
-    }
-
-    .float-item.sparkle { animation: sparkle-float 4s infinite ease-in-out; }
-    .float-item.star { animation: star-twirl 6s infinite ease-in-out; }
-    .float-item.leaf { animation: leaf-fall 8s infinite ease-in; }
-    .float-item.bee { animation: bee-buzz 4s infinite ease-in-out; }
-
-    .float-item.sparkle::before { content: '✨'; font-size: 20px; }
-    .float-item.star::before { content: '⭐'; font-size: 24px; }
-    .float-item.leaf::before { content: '🍃'; font-size: 26px; }
-    .float-item.bee::before { content: '🐝'; font-size: 24px; }
-
-    @keyframes sparkle-float {
-      0%, 100% { transform: translateX(0) translateY(0); }
-      25% { transform: translateX(10px) translateY(-10px); }
-      50% { transform: translateX(0) translateY(0); }
-      75% { transform: translateX(-10px) translateY(-10px); }
-    }
-
-    @keyframes star-twirl {
-      0%, 100% { transform: rotate(0deg) scale(1); }
-      50% { transform: rotate(180deg) scale(1.1); }
-    }
-
-    @keyframes leaf-fall {
-      0% { transform: translateY(0) translateX(0) rotateZ(0deg); }
-      25% { transform: translateY(20px) translateX(10px) rotateZ(15deg); }
-      50% { transform: translateY(40px) translateX(0) rotateZ(-15deg); }
-      75% { transform: translateY(60px) translateX(-10px) rotateZ(15deg); }
-      100% { transform: translateY(80px) translateX(0) rotateZ(0deg); }
-    }
-
-    @keyframes bee-buzz {
-      0%, 100% { transform: translateX(0) translateY(0); }
-      33% { transform: translateX(20px) translateY(-15px); }
-      66% { transform: translateX(-20px) translateY(15px); }
-    }
-
-    .inventory-section {
-      padding: 18px 14px;
+      flex-shrink: 0;
+      padding: clamp(5px, 1.2vh, 10px) clamp(10px, 2vw, 20px);
       display: flex;
-      flex-direction: column;
-      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      gap: clamp(8px, 1.5vw, 16px);
+      background: linear-gradient(to right, #1a3a0c, #2d5016, #1a3a0c);
+      border-bottom: 3px solid #0a1a00;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      z-index: 10;
+    }
+
+    .inv-header h1 {
+      color: #fff;
+      font-size: clamp(16px, 3.5vmin, 24px);
+      font-weight: 700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+      flex: 1;
+      text-align: center;
+    }
+
+    .back-btn {
+      flex-shrink: 0;
+      padding: clamp(4px, 0.8vmin, 7px) clamp(8px, 1.5vmin, 15px);
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 6px;
+      font-size: clamp(11px, 1.8vmin, 13px);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.35); }
+
+    /* ── Scrollable body ── */
+    .inv-body {
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* LANDSCAPE – sections side by side, scroll right */
+    @media (orientation: landscape) {
+      .inv-body {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x proximity;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.3) transparent;
+      }
+      .inv-section {
+        flex-shrink: 0;
+        width: 50vw;
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: clamp(8px, 1.5vh, 14px) clamp(10px, 1.8vw, 18px);
+        border-right: 1px solid rgba(255,255,255,0.12);
+        scroll-snap-align: start;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.2) transparent;
+      }
+    }
+
+    /* PORTRAIT – sections stacked, scroll down */
+    @media (orientation: portrait) {
+      .inv-body {
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.3) transparent;
+      }
+      .inv-section {
+        width: 100%;
+        padding: clamp(8px, 2vw, 14px);
+        border-bottom: 1px solid rgba(255,255,255,0.12);
+      }
     }
 
     .section-title {
       color: #fff;
-      font-size: 18px;
-      font-weight: 700;
-      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
-      margin-bottom: 4px;
+      font-size: clamp(18px, 4vmin, 28px);
+      font-weight: 900;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      margin-bottom: clamp(10px, 2vh, 20px);
+      letter-spacing: 0.5px;
     }
 
-    /* ── BOOSTERS ── */
+    /* ── Boosters shelf & Backgrounds grid – 3 per row ── */
     .boosters-shelf {
-      background: linear-gradient(to bottom, #8b6f47 0%, #7a5f3f 100%);
-      border: 2px solid #5a4a2a;
-      border-radius: 6px;
-      padding: 14px 10px;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 4px 0 rgba(0, 0, 0, 0.3);
-      min-height: 100px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: flex-start;
-      justify-content: center;
+      background: linear-gradient(to bottom, #8b6f47, #7a5f3f);
+      border: 3px solid #5a4a2a;
+      border-radius: 12px;
+      padding: clamp(12px, 2vmin, 18px);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), 0 4px 0 rgba(0,0,0,0.3);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(12px, 2.5vmin, 20px);
     }
 
     .booster-card {
-      background: linear-gradient(135deg, #fff5e6 0%, #ffe6cc 100%);
+      background: linear-gradient(135deg, #fff5e6, #ffe6cc);
       border: 3px solid #d4860c;
-      border-radius: 10px;
-      padding: 12px;
+      border-radius: 12px;
+      padding: clamp(12px, 2vmin, 20px);
       text-align: center;
-      flex: 0 0 calc(50% - 5px);
-      min-width: 70px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       transition: all 0.2s;
       position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100%;
     }
+    .booster-card:hover { transform: translateY(-3px); box-shadow: 0 6px 14px rgba(0,0,0,0.3); }
 
-    .booster-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    }
-
-    .booster-emoji {
-      font-size: 36px;
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    .booster-card h3 {
-      color: #d4860c;
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
+    .booster-emoji { font-size: clamp(42px, 10vmin, 64px); margin-bottom: 8px; display: block; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+    .booster-card h3 { color: #d4860c; font-size: clamp(13px, 2.5vmin, 17px); font-weight: 900; }
 
     .booster-qty {
       position: absolute;
-      top: 4px;
-      right: 6px;
+      top: 6px; right: 8px;
       background: #d4860c;
       color: #fff;
       border-radius: 50%;
-      width: 24px;
-      height: 24px;
+      width: clamp(28px, 5vmin, 40px);
+      height: clamp(28px, 5vmin, 40px);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 900;
-      font-size: 12px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      font-size: clamp(13px, 2.2vmin, 18px);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.4);
     }
 
-    .empty-state {
-      text-align: center;
-      padding: 28px 16px;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-
-    .empty-state-emoji {
-      font-size: 48px;
-      margin-bottom: 8px;
-      opacity: 0.5;
-    }
-
-    /* ── BACKGROUNDS ── */
+    /* ── Backgrounds grid ── */
     .backgrounds-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: clamp(12px, 2.5vmin, 20px);
     }
 
     .bg-item {
       background: #fff;
       border: 3px solid #3d5a2c;
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
-
-    .bg-item:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-    }
+    .bg-item:hover { transform: translateY(-3px); box-shadow: 0 6px 14px rgba(0,0,0,0.3); }
 
     .bg-preview {
       width: 100%;
-      height: 50px;
+      aspect-ratio: 16/12;
       background-size: cover;
       background-position: center;
+      flex-shrink: 0;
     }
 
     .bg-name {
-      padding: 8px;
-      font-size: 11px;
-      font-weight: 700;
+      padding: clamp(8px, 1.5vmin, 12px);
+      font-size: clamp(12px, 2.2vmin, 16px);
+      font-weight: 900;
       color: #333;
       text-align: center;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .back-button {
-      padding: 12px 24px;
-      margin: 16px auto 12px;
-      background: linear-gradient(135deg, #2d7a3e 0%, #1e5a2c 100%);
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      font-size: 14px;
+    /* ── Empty states ── */
+    .empty-state {
+      text-align: center;
+      padding: clamp(20px, 4vh, 36px) 16px;
+      color: rgba(255,255,255,0.6);
+      font-size: clamp(12px, 2.2vmin, 15px);
       font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: block;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
-
-    .back-button:hover {
-      background: linear-gradient(135deg, #3d8a4e 0%, #2e6a3c 100%);
-      transform: translateY(-2px);
-    }
-
-    .back-button:active {
-      transform: translateY(0);
-    }
+    .empty-state-emoji { font-size: clamp(36px, 7vmin, 56px); margin-bottom: 8px; opacity: 0.5; display: block; }
   </style>
 </head>
 <body>
   <div id="inventory-screen">
-    <div class="inventory-content">
-      <div class="float-item sparkle" style="top: 15%; right: 12%;"></div>
-      <div class="float-item sparkle" style="top: 50%; right: 15%; animation-delay: 1s;"></div>
-      <div class="float-item star" style="top: 20%; right: 20%; animation-delay: 0.5s;"></div>
-      <div class="float-item leaf" style="top: 30%; right: 18%; animation-delay: 1.2s;"></div>
-      <div class="float-item bee" style="top: 70%; right: 15%; animation-delay: 2.3s;"></div>
+    <div class="inv-header">
+      <button class="back-btn" onclick="goBack()">← BACK</button>
+      <h1>🎒 YOUR COLLECTION</h1>
+      <div></div>
+    </div>
 
-      <div class="inv-header">
-        <h1>🎒 YOUR COLLECTION</h1>
-      </div>
-
-      <!-- BOOSTERS SECTION -->
-      <div class="inventory-section">
+    <div class="inv-body">
+      <div class="inv-section">
         <div class="section-title">⚡ BOOSTERS</div>
         <div class="boosters-shelf" id="boosters-container"></div>
       </div>
-
-      <!-- BACKGROUNDS SECTION -->
-      <div class="inventory-section">
+      <div class="inv-section">
         <div class="section-title">🎨 BACKGROUNDS</div>
         <div class="backgrounds-grid" id="backgrounds-container"></div>
       </div>
-
-      <button class="back-button" onclick="goBack()">← BACK</button>
     </div>
   </div>
 
   <script>
     const clickSound = new Audio('../assets/Sounds/pop.mp3');
-
-    function playClick() {
-      clickSound.currentTime = 0;
-      clickSound.play().catch(() => {});
-    }
-
-    function goBack() {
-      playClick();
-      window.location.href = 'index.html';
-    }
+    function playClick() { clickSound.currentTime = 0; clickSound.play().catch(() => {}); }
+    function goBack() { playClick(); window.location.href = 'index.html'; }
 
     const BOOSTER_DATA = [
-      { id: 'bomb', name: 'Bomb', emoji: '💣' },
-      { id: 'lightning', name: 'Lightning', emoji: '⚡' },
-      { id: 'extra-life', name: 'Life', emoji: '❤️' },
-      { id: 'color-blast', name: 'Blast', emoji: '🌈' },
+      { id: 'bomb',        name: 'Bomb',   emoji: '💣' },
+      { id: 'lightning',   name: 'Lightning', emoji: '⚡' },
+      { id: 'extra-life',  name: 'Life',   emoji: '❤️' },
+      { id: 'color-blast', name: 'Blast',  emoji: '🌈' },
     ];
 
     const BG_DATA = [
-      { name: 'Autumn Garden', id: 'bg_autumn_garden', path: '../assets/backgrounds/bg_autumn_garden.png' },
-      { name: 'Lush Meadow', id: 'bg_lush_meadow', path: '../assets/backgrounds/bg_lush_meadow.png' },
-      { name: 'Morning Dew', id: 'bg_morning_dew', path: '../assets/backgrounds/bg_morning_dew.png' },
-      { name: 'Shaded Grove', id: 'bg_shaded_grove', path: '../assets/backgrounds/bg_shaded_grove.png' },
-      { name: 'Sunlit Garden', id: 'bg_sunlit_garden', path: '../assets/backgrounds/bg_sunlit_garden.png' },
+      { name: 'Autumn Garden',    id: 'bg_autumn_garden',    path: '../assets/backgrounds/bg_autumn_garden.png'    },
+      { name: 'Lush Meadow',      id: 'bg_lush_meadow',      path: '../assets/backgrounds/bg_lush_meadow.png'      },
+      { name: 'Morning Dew',      id: 'bg_morning_dew',      path: '../assets/backgrounds/bg_morning_dew.png'      },
+      { name: 'Shaded Grove',     id: 'bg_shaded_grove',     path: '../assets/backgrounds/bg_shaded_grove.png'     },
+      { name: 'Sunlit Garden',    id: 'bg_sunlit_garden',    path: '../assets/backgrounds/bg_sunlit_garden.png'    },
       { name: 'Wildflower Patch', id: 'bg_wildflower_patch', path: '../assets/backgrounds/bg_wildflower_patch.png' },
     ];
 
-    let inventory = {};
-    let unlockedBgs = new Set();
+    let inventory = {}, unlockedBgs = new Set();
 
     function loadData() {
       const invStr = localStorage.getItem('candyInventory');
-      inventory = invStr ? JSON.parse(invStr) : {};
-
+      inventory   = invStr ? JSON.parse(invStr) : {};
       const bgStr = localStorage.getItem('candyUnlockedBgs');
       unlockedBgs = bgStr ? new Set(JSON.parse(bgStr)) : new Set(['bg_lush_meadow']);
-
-      BOOSTER_DATA.forEach(b => {
-        if (!inventory[b.id]) inventory[b.id] = 0;
-      });
+      BOOSTER_DATA.forEach(b => { if (!inventory[b.id]) inventory[b.id] = 0; });
     }
 
     function renderInventory() {
-      // BOOSTERS
       const boostedOwned = BOOSTER_DATA.filter(b => inventory[b.id] > 0);
+      document.getElementById('boosters-container').innerHTML = boostedOwned.length === 0
+        ? `<div class="empty-state" style="grid-column:1/-1">
+             <span class="empty-state-emoji">✨</span>
+             <div>No boosters yet.<br>Visit the shop to buy some!</div>
+           </div>`
+        : boostedOwned.map(b => `
+            <div class="booster-card">
+              <span class="booster-qty">${inventory[b.id]}</span>
+              <span class="booster-emoji">${b.emoji}</span>
+              <h3>${b.name}</h3>
+            </div>`).join('');
 
-      if (boostedOwned.length === 0) {
-        document.getElementById('boosters-container').innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-emoji">✨</div>
-            <div>No boosters yet.<br>Visit the shop to buy some!</div>
-          </div>
-        `;
-      } else {
-        const boosterHtml = boostedOwned.map(b => `
-          <div class="booster-card">
-            <span class="booster-qty">${inventory[b.id]}</span>
-            <span class="booster-emoji">${b.emoji}</span>
-            <h3>${b.name}</h3>
-          </div>
-        `).join('');
-        document.getElementById('boosters-container').innerHTML = boosterHtml;
-      }
-
-      // BACKGROUNDS
       const bgOwned = BG_DATA.filter(bg => unlockedBgs.has(bg.id));
-
-      if (bgOwned.length === 0) {
-        document.getElementById('backgrounds-container').innerHTML = `
-          <div class="empty-state" style="grid-column: 1/-1;">
-            <div class="empty-state-emoji">🎨</div>
-            <div>No backgrounds collected yet.<br>Head to the shop to unlock some!</div>
-          </div>
-        `;
-      } else {
-        const bgHtml = bgOwned.map(bg => `
-          <div class="bg-item">
-            <div class="bg-preview" style="background-image: url('${bg.path}')"></div>
-            <div class="bg-name">${bg.name}</div>
-          </div>
-        `).join('');
-        document.getElementById('backgrounds-container').innerHTML = bgHtml;
-      }
+      document.getElementById('backgrounds-container').innerHTML = bgOwned.length === 0
+        ? `<div class="empty-state" style="grid-column:1/-1">
+             <span class="empty-state-emoji">🎨</span>
+             <div>No backgrounds yet.<br>Head to the shop to unlock some!</div>
+           </div>`
+        : bgOwned.map(bg => `
+            <div class="bg-item">
+              <div class="bg-preview" style="background-image:url('${bg.path}')"></div>
+              <div class="bg-name">${bg.name}</div>
+            </div>`).join('');
     }
 
     loadData();
