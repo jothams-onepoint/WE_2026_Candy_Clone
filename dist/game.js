@@ -480,12 +480,23 @@ function showWinScreen() {
   removeUrgencyEffects();
   const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
   const currentTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');
+  const currentCoins = parseInt(localStorage.getItem('candyCoins') || '0');
+
+  const coinsEarned = Math.floor(points / 10);
   localStorage.setItem('candyLevel', String(currentLevel + 1));
   localStorage.setItem('candyWinTarget', String(currentTarget + 50));
+  localStorage.setItem('candyCoins', String(currentCoins + coinsEarned));
+
+  const levelWinsKey = `levelWins_${currentLevel}`;
+  const currentLevelWins = parseInt(localStorage.getItem(levelWinsKey) || '0');
+  localStorage.setItem(levelWinsKey, String(currentLevelWins + 1));
+
   const screen = document.getElementById('win-screen');
   const scoreEl = document.getElementById('win-score');
+  const coinsEl = document.getElementById('win-coins');
   if (!screen || !scoreEl) return;
   scoreEl.textContent = String(points);
+  if (coinsEl) coinsEl.textContent = String(coinsEarned);
   screen.classList.remove('hidden');
 }
 
