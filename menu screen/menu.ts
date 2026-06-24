@@ -1,4 +1,9 @@
 const BASE: string = '../assets/animations/menu animations/';
+const popSound = new Audio('../assets/Sounds/pop.mp3');
+function playPop(): void {
+  popSound.currentTime = 0;
+  popSound.play().catch(() => {});
+}
 
 function setupButton(
   id: string,
@@ -50,9 +55,9 @@ document.addEventListener('DOMContentLoaded', (): void => {
 
   setupButton('btn-play',     BASE + 'play_idle.png',     null,                            () => window.location.href = '../index.html?autostart=1');
   setupButton('btn-settings', BASE + 'settings_idle.png', BASE + 'settings_click.png',     () => openPopup('popup-settings'));
-  setupButton('btn-home',     BASE + 'home_idle.png',     BASE + 'home_click.png');
+  setupButton('btn-home',     BASE + 'home_idle.png',     BASE + 'home_click.png',         () => playPop());
   setupButton('btn-quests',   BASE + 'quests_idle.png',   BASE + 'quests_click.png',       () => openPopup('popup-quests'));
-  setupButton('btn-shop',     BASE + 'shop_idle.png',     BASE + 'shop_click.png',         () => window.location.href = 'shop.html');
+  setupButton('btn-shop',     BASE + 'shop_idle.png',     BASE + 'shop_click.png',         () => { playPop(); window.location.href = 'shop.html'; });
 
   // Close popups on background click
   document.getElementById('popup-settings')?.addEventListener('click', (e: Event) => {

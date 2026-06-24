@@ -293,6 +293,7 @@
     const clickSound = new Audio('../assets/Sounds/pop.mp3');
 
     function playClick() {
+      if (localStorage.getItem('soundEnabled') === 'false') return;
       clickSound.currentTime = 0;
       clickSound.play().catch(() => {});
     }

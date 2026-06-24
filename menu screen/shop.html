@@ -45,8 +45,6 @@
       padding: 0;
     }
 
-    #shop-screen {
-
     .shop-header {
       background: linear-gradient(to bottom, #3d5a2c 0%, #2d4a1c 100%);
       padding: 16px;
@@ -377,6 +375,7 @@
     const clickSound = new Audio('../assets/Sounds/pop.mp3');
 
     function playClick() {
+      if (localStorage.getItem('soundEnabled') === 'false') return;
       clickSound.currentTime = 0;
       clickSound.play().catch(() => {});
     }

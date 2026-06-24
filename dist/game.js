@@ -1,3 +1,4 @@
+function isSoundOn() { return localStorage.getItem('soundEnabled') !== 'false'; }
 const ICONS = ['ant', 'blue_flower', 'grass', 'potted_plant', 'red_flower', 'shovel'];
 const ICON_SETS = ['tile_icons_red', 'Tile_icons_blue'];
 const BACKGROUNDS = [
@@ -108,8 +109,7 @@ async function fireBomb(centerRow, centerCol) {
   });
   updateScoreDisplay();
 
-  crunchSound.currentTime = 0.8;
-  crunchSound.play().catch(() => {});
+  if (isSoundOn()) { crunchSound.currentTime = 0.8; crunchSound.play().catch(() => {}); }
   affected.forEach(({ row, col }) => showBreakAnimation(row, col));
   await sleep(520);
 
@@ -461,12 +461,14 @@ async function processMatches(depth = 0) {
     if (cell) cell.classList.add('matched-flash');
   });
 
-  if (playChime) {
-    chimeSound.currentTime = 0;
-    chimeSound.play().catch(() => {});
-  } else {
-    crunchSound.currentTime = 0.8;
-    crunchSound.play().catch(() => {});
+  if (isSoundOn()) {
+    if (playChime) {
+      chimeSound.currentTime = 0;
+      chimeSound.play().catch(() => {});
+    } else {
+      crunchSound.currentTime = 0.8;
+      crunchSound.play().catch(() => {});
+    }
   }
 
   await sleep(100);
@@ -516,8 +518,7 @@ function flashInvalid(r1, c1) {
   if (!cell) return;
   cell.classList.add('invalid-swap');
   setTimeout(() => cell.classList.remove('invalid-swap'), 350);
-  invalidSwapSound.currentTime = 0;
-  invalidSwapSound.play().catch(() => {});
+  if (isSoundOn()) { invalidSwapSound.currentTime = 0; invalidSwapSound.play().catch(() => {}); }
 }
 
 const SWAP_DURATION = 180;
@@ -580,8 +581,7 @@ async function trySwap(r1, c1, r2, c2) {
 
   if (hasMatchAt(r1, c1) || hasMatchAt(r2, c2)) {
     isAnimating = true;
-    whooshSound.currentTime = 0;
-    whooshSound.play().catch(() => {});
+    if (isSoundOn()) { whooshSound.currentTime = 0; whooshSound.play().catch(() => {}); }
     await animateSwap(r1, c1, r2, c2);
     movesUsed++;
     updateMovesDisplay();

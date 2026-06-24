@@ -111,8 +111,7 @@ async function fireBomb(centerRow: number, centerCol: number): Promise<void> {
   });
   updateScoreDisplay();
 
-  crunchSound.currentTime = 0.8;
-  crunchSound.play().catch(() => {});
+  if (isSoundOn()) { crunchSound.currentTime = 0.8; crunchSound.play().catch(() => {}); }
   affected.forEach(({ row, col }) => showBreakAnimation(row, col));
   await sleep(520);
 
@@ -188,6 +187,7 @@ function renderBoosterBar(): void {
   });
 }
 
+const isSoundOn = () => localStorage.getItem('soundEnabled') !== 'false';
 const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
 const crunchSound = new Audio('assets/Sounds/crunch.mp3');
@@ -468,12 +468,14 @@ async function processMatches(depth = 0): Promise<void> {
     if (cell) cell.classList.add('matched-flash');
   });
 
-  if (playChime) {
-    chimeSound.currentTime = 0;
-    chimeSound.play().catch(() => {});
-  } else {
-    crunchSound.currentTime = 0.8;
-    crunchSound.play().catch(() => {});
+  if (isSoundOn()) {
+    if (playChime) {
+      chimeSound.currentTime = 0;
+      chimeSound.play().catch(() => {});
+    } else {
+      crunchSound.currentTime = 0.8;
+      crunchSound.play().catch(() => {});
+    }
   }
 
   await sleep(100);
@@ -523,8 +525,7 @@ function flashInvalid(r1: number, c1: number): void {
   if (!cell) return;
   cell.classList.add('invalid-swap');
   setTimeout(() => cell.classList.remove('invalid-swap'), 350);
-  invalidSwapSound.currentTime = 0;
-  invalidSwapSound.play().catch(() => {});
+  if (isSoundOn()) { invalidSwapSound.currentTime = 0; invalidSwapSound.play().catch(() => {}); }
 }
 
 const SWAP_DURATION = 180;
@@ -587,8 +588,7 @@ async function trySwap(r1: number, c1: number, r2: number, c2: number): Promise<
 
   if (hasMatchAt(r1, c1) || hasMatchAt(r2, c2)) {
     isAnimating = true;
-    whooshSound.currentTime = 0;
-    whooshSound.play().catch(() => {});
+    if (isSoundOn()) { whooshSound.currentTime = 0; whooshSound.play().catch(() => {}); }
     await animateSwap(r1, c1, r2, c2);
     movesUsed++;
     updateMovesDisplay();
