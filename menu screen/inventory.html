@@ -215,6 +215,22 @@
       font-weight: 600;
     }
     .empty-state-emoji { font-size: clamp(36px, 7vmin, 56px); margin-bottom: 8px; opacity: 0.5; display: block; }
+
+    .bg-select-btn {
+      width: 100%;
+      padding: 5px;
+      border: none;
+      border-radius: 0 0 7px 7px;
+      font-weight: 700;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: linear-gradient(135deg, #2d7a3e 0%, #1e5a2c 100%);
+      color: #fff;
+    }
+    .bg-select-btn:hover { background: linear-gradient(135deg, #3d8a4e 0%, #2e6a3c 100%); }
+    .bg-select-btn.selected { background: linear-gradient(135deg, #7a3aad 0%, #5a1a8a 100%); cursor: default; }
+    .bg-item.bg-selected { border-color: #9933cc; box-shadow: 0 0 10px rgba(150, 50, 220, 0.5); }
   </style>
 </head>
 <body>
@@ -277,6 +293,12 @@
       BOOSTER_DATA.forEach(b => { if (!inventory[b.id]) inventory[b.id] = 0; });
     }
 
+    function selectBackground(bgId) {
+      playClick();
+      localStorage.setItem('candySelectedBg', bgId);
+      renderInventory();
+    }
+
     function renderInventory() {
       const boostedOwned = BOOSTER_DATA.filter(b => inventory[b.id] > 0);
       document.getElementById('boosters-container').innerHTML = boostedOwned.length === 0
@@ -292,16 +314,32 @@
             </div>`).join('');
 
       const bgOwned = BG_DATA.filter(bg => unlockedBgs.has(bg.id));
-      document.getElementById('backgrounds-container').innerHTML = bgOwned.length === 0
-        ? `<div class="empty-state" style="grid-column:1/-1">
-             <span class="empty-state-emoji">🎨</span>
-             <div>No backgrounds yet.<br>Head to the shop to unlock some!</div>
-           </div>`
-        : bgOwned.map(bg => `
-            <div class="bg-item">
-              <div class="bg-preview" style="background-image:url('${bg.path}')"></div>
+
+      if (bgOwned.length === 0) {
+        document.getElementById('backgrounds-container').innerHTML = `
+          <div class="empty-state" style="grid-column: 1/-1;">
+            <div class="empty-state-emoji">🎨</div>
+            <div>No backgrounds collected yet.<br>Head to the shop to unlock some!</div>
+          </div>
+        `;
+      } else {
+        const selectedBgId = localStorage.getItem('candySelectedBg');
+        const bgHtml = bgOwned.map(bg => {
+          const isSelected = selectedBgId === bg.id;
+          return `
+            <div class="bg-item${isSelected ? ' bg-selected' : ''}">
+              <div class="bg-preview" style="background-image: url('${bg.path}')"></div>
               <div class="bg-name">${bg.name}</div>
-            </div>`).join('');
+              <button class="bg-select-btn${isSelected ? ' selected' : ''}"
+                onclick="${isSelected ? '' : `selectBackground('${bg.id}')`}"
+                ${isSelected ? 'disabled' : ''}>
+                ${isSelected ? '✓ SELECTED' : 'SELECT'}
+              </button>
+            </div>
+          `;
+        }).join('');
+        document.getElementById('backgrounds-container').innerHTML = bgHtml;
+      }
     }
 
     loadData();

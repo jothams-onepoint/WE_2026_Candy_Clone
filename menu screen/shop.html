@@ -338,6 +338,12 @@
       renderShop();
     }
 
+    function selectBackground(bgId) {
+      playClick();
+      localStorage.setItem('candySelectedBg', bgId);
+      renderShop();
+    }
+
     function buyBackground(bgId) {
       const bg = BG_DATA.find(x => x.id === bgId);
       if (!bg) return;
@@ -363,23 +369,39 @@
           <button onclick="buyBooster('${b.id}')">BUY</button>
         </div>`).join('');
 
-      document.getElementById('backgrounds-grid').innerHTML = BG_DATA.map(bg => {
+      // Backgrounds
+      const selectedBgId = localStorage.getItem('candySelectedBg');
+      const bgHtml = BG_DATA.map(bg => {
         const isLocked = currentLevel < bg.unlockLevel;
-        const isOwned  = unlockedBgs.has(bg.id);
+        const isOwned = unlockedBgs.has(bg.id);
+        const isSelected = selectedBgId === bg.id;
+        const lockedClass = isLocked ? 'locked' : '';
+
+        let btnLabel, btnOnclick, btnDisabled, btnStyle;
+        if (isLocked) {
+          btnLabel = 'LOCKED'; btnOnclick = ''; btnDisabled = 'disabled'; btnStyle = '';
+        } else if (!isOwned) {
+          btnLabel = 'BUY'; btnOnclick = `buyBackground('${bg.id}')`; btnDisabled = ''; btnStyle = '';
+        } else if (isSelected) {
+          btnLabel = '✓ SELECTED'; btnOnclick = ''; btnDisabled = 'disabled';
+          btnStyle = 'background:linear-gradient(135deg,#7a3aad 0%,#5a1a8a 100%);color:#fff;';
+        } else {
+          btnLabel = 'SELECT'; btnOnclick = `selectBackground('${bg.id}')`; btnDisabled = '';
+          btnStyle = 'background:linear-gradient(135deg,#1e7a4e 0%,#145a38 100%);';
+        }
+
         return `
-          <div class="bg-card ${isLocked ? 'locked' : ''}">
-            <div class="bg-preview" style="background-image:url('${bg.path}')">
-              ${isLocked ? `<div class="lock-icon">🔒</div>` : ''}
-            </div>
+          <div class="bg-card ${lockedClass}${isSelected ? ' bg-selected' : ''}">
+            <div class="bg-preview" style="background-image: url('${bg.path}')"></div>
+            ${isLocked ? `<div class="lock-icon">🔒</div>` : ''}
             <div class="bg-info" data-level="${bg.unlockLevel}">
               <div>${bg.name}</div>
-              ${!isOwned && !isLocked ? `<span class="bg-price">💰 ${bg.price}</span>` : ''}
-              ${isOwned ? `<div style="color:#2d7a3e;font-weight:900;">✓ OWNED</div>` : ''}
+              ${!isOwned && !isLocked ? `<div class="bg-price">💰 ${bg.price}</div>` : ''}
+              ${isOwned && !isSelected ? `<div style="color:#2d7a3e;font-weight:900;">✓ OWNED</div>` : ''}
             </div>
-            <button onclick="buyBackground('${bg.id}')" ${isOwned || isLocked ? 'disabled' : ''}>
-              ${isOwned ? 'OWNED' : isLocked ? 'LOCKED' : 'BUY'}
-            </button>
-          </div>`;
+            <button onclick="${btnOnclick}" ${btnDisabled} style="${btnStyle}">${btnLabel}</button>
+          </div>
+        `;
       }).join('');
     }
 

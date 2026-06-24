@@ -229,6 +229,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const musicToggle = document.getElementById('music-toggle');
+  if (musicToggle) {
+    musicToggle.checked = localStorage.getItem('musicEnabled') !== 'false';
+    musicToggle.addEventListener('change', () => {
+      localStorage.setItem('musicEnabled', musicToggle.checked ? 'true' : 'false');
+    });
+  }
   const levelDisplay = document.getElementById('level-display');
   if (levelDisplay) {
     levelDisplay.addEventListener('click', () => {

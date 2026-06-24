@@ -191,6 +191,36 @@ function renderBoosterBar(): void {
 const isSoundOn = () => localStorage.getItem('soundEnabled') !== 'false';
 const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
+
+const bgMusic = new Audio('assets/Sounds/backgroundsong.mp3');
+
+bgMusic.addEventListener('timeupdate', () => {
+  if (!bgMusic.duration) return;
+  const remaining = bgMusic.duration - bgMusic.currentTime;
+  if (remaining > 0 && remaining <= 3) {
+    bgMusic.volume = remaining / 3;
+  }
+});
+
+bgMusic.addEventListener('ended', () => {
+  if (localStorage.getItem('musicEnabled') === 'false') return;
+  bgMusic.currentTime = 0;
+  bgMusic.volume = 0;
+  bgMusic.play().catch(() => {});
+  const start = performance.now();
+  function fadeIn(now: number): void {
+    const t = Math.min((now - start) / 3000, 1);
+    bgMusic.volume = t;
+    if (t < 1) requestAnimationFrame(fadeIn);
+  }
+  requestAnimationFrame(fadeIn);
+});
+
+function startBgMusic(): void {
+  if (localStorage.getItem('musicEnabled') === 'false') return;
+  bgMusic.volume = 1;
+  bgMusic.play().catch(() => {});
+}
 const crunchSound = new Audio('assets/Sounds/crunch.mp3');
 const chimeSound = new Audio('assets/Sounds/chime.mp3');
 
@@ -428,6 +458,169 @@ function showBreakAnimation(row: number, col: number): void {
   cell.classList.add('breaking');
 }
 
+function showPortalRing(cx: number, cy: number): void {
+  const SIZE = 800;
+  const canvas = document.createElement('canvas');
+  canvas.width = SIZE;
+  canvas.height = SIZE;
+  canvas.style.cssText = `position:fixed;left:${cx - SIZE/2}px;top:${cy - SIZE/2}px;pointer-events:none;z-index:98;transform-origin:center;`;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d')!;
+  const CX = SIZE / 2, CY = SIZE / 2, R = 285;
+
+  const strands = Array.from({ length: 36 }, () => {
+    const isPurple = Math.random() > 0.42;
+    const baseAngle = Math.random() * Math.PI * 2;
+    const span = (Math.random() * 0.7 + 0.3) * Math.PI;
+    const r = R + (Math.random() - 0.5) * 38;
+    const w = Math.random() * 7 + 2;
+    const alpha = Math.random() * 0.7 + 0.3;
+    const color = isPurple
+      ? `rgba(${180 + Math.floor(Math.random()*60)},${Math.floor(Math.random()*60)},${220 + Math.floor(Math.random()*35)},${alpha})`
+      : `rgba(${220 + Math.floor(Math.random()*35)},${80 + Math.floor(Math.random()*80)},${Math.floor(Math.random()*40)},${alpha})`;
+    return { baseAngle, span, r, w, color };
+  });
+
+  const hotspots = Array.from({ length: 10 }, () => ({
+    angle: Math.random() * Math.PI * 2,
+    size: Math.random() * 5 + 2,
+  }));
+
+  const sparks = Array.from({ length: 45 }, () => {
+    const a = Math.random() * Math.PI * 2;
+    const isPurple = Math.random() > 0.45;
+    return {
+      x: CX + Math.cos(a) * R, y: CY + Math.sin(a) * R,
+      vx: (Math.random() - 0.5) * 3.5, vy: (Math.random() - 0.5) * 3.5,
+      size: Math.random() * 2.5 + 0.5,
+      color: isPurple ? '#dd66ff' : '#ff7722',
+    };
+  });
+
+  const START = performance.now();
+  const DURATION = 1000;
+
+  function frame(now: number): void {
+    const t = Math.min((now - START) / DURATION, 1);
+    const scale   = t < 0.45 ? t / 0.45 : 1;
+    const opacity = t < 0.25 ? t / 0.25 : (t > 0.65 ? 1 - (t - 0.65) / 0.35 : 1);
+    canvas.style.transform = `scale(${scale})`;
+    canvas.style.opacity   = String(opacity);
+    ctx.clearRect(0, 0, SIZE, SIZE);
+
+    const bg = ctx.createRadialGradient(CX, CY, 60, CX, CY, R + 40);
+    bg.addColorStop(0,   'rgba(10,0,20,0.35)');
+    bg.addColorStop(0.6, 'rgba(40,0,80,0.12)');
+    bg.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.beginPath(); ctx.arc(CX, CY, R + 40, 0, Math.PI * 2);
+    ctx.fillStyle = bg; ctx.fill();
+
+    strands.forEach(s => {
+      ctx.save();
+      ctx.shadowColor = s.color; ctx.shadowBlur = 18;
+      ctx.strokeStyle = s.color; ctx.lineWidth = s.w; ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(CX, CY, s.r, s.baseAngle, s.baseAngle + s.span);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    ([
+      { color: '#cc00ff', start: Math.PI * 0.85, end: Math.PI * 2.3,  w: 6 },
+      { color: '#ff44bb', start: Math.PI * 1.0,  end: Math.PI * 2.15, w: 3 },
+      { color: '#ff5500', start: -Math.PI * 0.15, end: Math.PI * 0.95, w: 6 },
+      { color: '#ffaa22', start: -Math.PI * 0.1,  end: Math.PI * 0.8,  w: 3 },
+    ] as { color: string; start: number; end: number; w: number }[]).forEach(({ color, start, end, w }) => {
+      ctx.save();
+      ctx.shadowColor = color; ctx.shadowBlur = 28;
+      ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(CX, CY, R, start, end); ctx.stroke();
+      ctx.restore();
+    });
+
+    hotspots.forEach(h => {
+      const hx = CX + Math.cos(h.angle) * R, hy = CY + Math.sin(h.angle) * R;
+      ctx.save();
+      ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 20;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(hx, hy, h.size, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+
+    sparks.forEach(s => {
+      s.x += s.vx; s.y += s.vy;
+      ctx.save();
+      ctx.shadowColor = s.color; ctx.shadowBlur = 10;
+      ctx.fillStyle = s.color;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    });
+
+    if (t < 1) requestAnimationFrame(frame);
+    else canvas.remove();
+  }
+  requestAnimationFrame(frame);
+}
+
+function showGlitterBurst(cx: number, cy: number): void {
+  const SIZE = 640;
+  const canvas = document.createElement('canvas');
+  canvas.width = SIZE;
+  canvas.height = SIZE;
+  canvas.style.cssText = `position:fixed;left:${cx - SIZE / 2}px;top:${cy - SIZE / 2}px;pointer-events:none;z-index:99;transform-origin:center;`;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d')!;
+
+  const COLORS = ['#ffffff','#aae8ff','#33bbff','#0077ff','#4433ff','#9922ff','#cc44ff','#ff99ff'];
+  const particles = Array.from({ length: 260 }, () => {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = Math.random() * 2.2 + 0.3;
+    const size  = Math.random() * 3.5 + 0.5;
+    const dist  = Math.random() * 140 + 10;
+    return { x: SIZE / 2, y: SIZE / 2, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, r: size, color: COLORS[Math.floor(Math.random() * COLORS.length)], maxDist: dist, traveled: 0 };
+  });
+
+  const START = performance.now();
+  const DURATION = 720;
+
+  function frame(now: number): void {
+    const t = Math.min((now - START) / DURATION, 1);
+    const scale   = t < 0.35 ? t / 0.35 : 1;
+    const opacity = t > 0.55 ? 1 - (t - 0.55) / 0.45 : 1;
+    canvas.style.transform = `scale(${scale})`;
+    canvas.style.opacity   = String(opacity);
+
+    ctx.clearRect(0, 0, SIZE, SIZE);
+
+    const grd = ctx.createRadialGradient(SIZE/2, SIZE/2, 0, SIZE/2, SIZE/2, 60 * scale);
+    grd.addColorStop(0,   'rgba(255,255,255,0.85)');
+    grd.addColorStop(0.3, 'rgba(160,230,255,0.5)');
+    grd.addColorStop(1,   'rgba(0,120,255,0)');
+    ctx.beginPath();
+    ctx.arc(SIZE/2, SIZE/2, 60, 0, Math.PI * 2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+
+    particles.forEach(p => {
+      if (p.traveled < p.maxDist) {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.traveled += Math.hypot(p.vx, p.vy);
+      }
+      ctx.globalAlpha = opacity;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    if (t < 1) requestAnimationFrame(frame);
+    else canvas.remove();
+  }
+  requestAnimationFrame(frame);
+}
+
 function showScoreFlash(cells: { row: number; col: number }[], amount: number): void {
   let sumX = 0, sumY = 0, count = 0;
   cells.forEach(({ row, col }) => {
@@ -445,6 +638,15 @@ function showScoreFlash(cells: { row: number; col: number }[], amount: number): 
   flash.textContent = `+${amount}`;
   flash.style.left = `${sumX / count}px`;
   flash.style.top = `${sumY / count}px`;
+  if (cells.length === 4) {
+    flash.style.fontSize = '3.24rem';
+    flash.style.color = gameIconSet === 'tile_icons_red' ? '#1a6bff' : '#ff2020';
+    showGlitterBurst(sumX / count, sumY / count);
+  } else if (cells.length === 5) {
+    flash.style.fontSize = '5.4rem';
+    flash.style.color = '#aa00ff';
+    showPortalRing(sumX / count, sumY / count);
+  }
   document.body.appendChild(flash);
   setTimeout(() => flash.remove(), 900);
 }
@@ -687,7 +889,21 @@ function showWinScreen(): void {
 
 function applyRandomBackground(): string {
   const bgSys = (window as any).BgSystem;
-  const bgIdx = Math.floor(Math.random() * (bgSys ? bgSys.count() : BACKGROUNDS.length));
+  const selectedId = localStorage.getItem('candySelectedBg');
+  let bgIdx = 0;
+
+  if (selectedId && bgSys) {
+    for (let i = 0; i < bgSys.count(); i++) {
+      const info = bgSys.info(i);
+      if (info && info.id && info.id.includes(selectedId)) {
+        bgIdx = i;
+        break;
+      }
+    }
+  } else {
+    bgIdx = Math.floor(Math.random() * (bgSys ? bgSys.count() : BACKGROUNDS.length));
+  }
+
   savedBgIndex = bgIdx;
   if (bgSys) {
     bgSys.start(bgIdx);
@@ -882,6 +1098,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.BgSystem.init();
     window.BgSystem.start(0); // lush meadow
   }
+
+  startBgMusic();
 
   const params = new URLSearchParams(window.location.search);
   const autostart = params.has('autostart');
