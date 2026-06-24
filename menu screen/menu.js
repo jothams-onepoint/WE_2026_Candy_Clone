@@ -48,6 +48,10 @@ function closePopup(popupId) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const level = parseInt(localStorage.getItem('candyLevel') || '1');
+  const levelEl = document.getElementById('level-number');
+  if (levelEl) levelEl.textContent = String(level);
+
   setupButton('btn-play',     BASE + 'play_idle.png',     null,                            () => openPopup('popup-difficulty'));
   setupButton('btn-settings', BASE + 'settings_idle.png', BASE + 'settings_click.png',     () => openPopup('popup-settings'));
   setupButton('btn-home',     BASE + 'home_idle.png',     BASE + 'home_click.png',         () => window.location.href = 'inventory.html');

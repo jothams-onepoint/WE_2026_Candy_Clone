@@ -17,11 +17,18 @@ let gameGrid: IconName[][] = [];
 let goldGrid: boolean[][] = [];
 let gameIconSet: IconSet;
 let points = 0;
+let winTarget = 500;
 let isAnimating = false;
 let moveCap = 0;
 let movesUsed = 0;
 let timeLeft = 40;
 let timerInterval: number | null = null;
+
+let savedGrid: IconName[][] = [];
+let savedGoldGrid: boolean[][] = [];
+let savedIconSet: IconSet = 'tile_icons_red';
+let savedMoveCap = 0;
+let savedBackground = '';
 
 const whooshSound = new Audio('assets/Sounds/whoosh.mp3');
 const invalidSwapSound = new Audio('assets/Sounds/invalidswap.mp3');
@@ -289,6 +296,13 @@ async function processMatches(depth = 0): Promise<void> {
 
   updateScoreDisplay();
 
+  if (points >= winTarget) {
+    stopTimer();
+    isAnimating = true;
+    showWinScreen();
+    return;
+  }
+
   if (playChime) {
     chimeSound.currentTime = 0;
     chimeSound.play().catch(() => {});
@@ -355,6 +369,54 @@ function flashInvalid(r1: number, c1: number): void {
   invalidSwapSound.play().catch(() => {});
 }
 
+const SWAP_DURATION = 180;
+
+async function animateSwap(r1: number, c1: number, r2: number, c2: number): Promise<void> {
+  const cell1 = getCellElement(r1, c1);
+  const cell2 = getCellElement(r2, c2);
+  if (!cell1 || !cell2) {
+    updateCellDOM(r1, c1);
+    updateCellDOM(r2, c2);
+    return;
+  }
+
+  const rect1 = cell1.getBoundingClientRect();
+  const rect2 = cell2.getBoundingClientRect();
+  const dx = rect2.left - rect1.left;
+  const dy = rect2.top - rect1.top;
+
+  const ease = `transform ${SWAP_DURATION}ms cubic-bezier(0.4, 0, 0.2, 1)`;
+  cell1.style.transition = ease;
+  cell2.style.transition = ease;
+  cell1.style.zIndex = '5';
+  cell2.style.zIndex = '4';
+
+  // Force reflow so transition is active before transform changes
+  void cell1.getBoundingClientRect();
+
+  // Slide each cell to the other's position (icons unchanged during slide)
+  cell1.style.transform = `translate(${dx}px, ${dy}px)`;
+  cell2.style.transform = `translate(${-dx}px, ${-dy}px)`;
+
+  await sleep(SWAP_DURATION);
+
+  // Snap back to actual grid positions and update icons
+  cell1.style.transition = 'none';
+  cell2.style.transition = 'none';
+  cell1.style.transform = '';
+  cell2.style.transform = '';
+  cell1.style.zIndex = '';
+  cell2.style.zIndex = '';
+  updateCellDOM(r1, c1);
+  updateCellDOM(r2, c2);
+
+  // Restore CSS transition on next frame
+  requestAnimationFrame(() => {
+    cell1.style.transition = '';
+    cell2.style.transition = '';
+  });
+}
+
 async function trySwap(r1: number, c1: number, r2: number, c2: number): Promise<void> {
   if (isAnimating) return;
 
@@ -367,10 +429,9 @@ async function trySwap(r1: number, c1: number, r2: number, c2: number): Promise<
 
   if (hasMatchAt(r1, c1) || hasMatchAt(r2, c2)) {
     isAnimating = true;
-    updateCellDOM(r1, c1);
-    updateCellDOM(r2, c2);
     whooshSound.currentTime = 0;
     whooshSound.play().catch(() => {});
+    await animateSwap(r1, c1, r2, c2);
     movesUsed++;
     updateMovesDisplay();
     if (movesUsed >= moveCap) {
@@ -424,6 +485,10 @@ function handleDragEnd(endX: number, endY: number): void {
 function showWinScreen(): void {
   stopTimer();
   removeUrgencyEffects();
+  const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
+  const currentTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');
+  localStorage.setItem('candyLevel', String(currentLevel + 1));
+  localStorage.setItem('candyWinTarget', String(currentTarget + 50));
   const screen = document.getElementById('win-screen');
   const scoreEl = document.getElementById('win-score');
   if (!screen || !scoreEl) return;
@@ -431,23 +496,35 @@ function showWinScreen(): void {
   screen.classList.remove('hidden');
 }
 
-function applyRandomBackground(): void {
+function applyRandomBackground(): string {
   const bg = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
+  document.body.style.backgroundImage = `url('${bg}')`;
+  document.body.style.backgroundSize = 'cover';
+  document.body.style.backgroundPosition = 'center';
+  return bg;
+}
+
+function applyBackground(bg: string): void {
   document.body.style.backgroundImage = `url('${bg}')`;
   document.body.style.backgroundSize = 'cover';
   document.body.style.backgroundPosition = 'center';
 }
 
 function startGame(): void {
-  applyRandomBackground();
-  moveCap = Math.floor(Math.random() * 11) + 15;
+  winTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');
+  savedBackground = applyRandomBackground();
+  savedMoveCap = Math.floor(Math.random() * 11) + 15;
+  moveCap = savedMoveCap;
   movesUsed = 0;
   const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
   timeLeft = diff === 'easy' ? 120 : diff === 'hard' ? 60 : 90;
   isAnimating = false;
   gameIconSet = pickIconSet();
+  savedIconSet = gameIconSet;
   gameGrid = generateGrid();
+  savedGrid = gameGrid.map(row => [...row]);
   goldGrid = generateGoldGrid();
+  savedGoldGrid = goldGrid.map(row => [...row]);
   renderGrid();
   setupDragHandlers();
   updateScoreDisplay();
@@ -461,7 +538,20 @@ function resetGame(): void {
   removeUrgencyEffects();
   points = 0;
   document.getElementById('loss-screen')!.classList.add('hidden');
-  startGame();
+  applyBackground(savedBackground);
+  moveCap = savedMoveCap;
+  movesUsed = 0;
+  timeLeft = 40;
+  isAnimating = false;
+  gameIconSet = savedIconSet;
+  gameGrid = savedGrid.map(row => [...row]);
+  goldGrid = savedGoldGrid.map(row => [...row]);
+  renderGrid();
+  setupDragHandlers();
+  updateScoreDisplay();
+  updateMovesDisplay();
+  updateTimerDisplay();
+  startTimer();
 }
 
 function goToMenu(): void {
