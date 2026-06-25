@@ -91,6 +91,27 @@ function highlightBombArea(centerRow, centerCol) {
   }
 }
 
+function showBombBurst(cx, cy) {
+  const DURATION = 275;
+  const END_SIZE = 650;
+  const START_SIZE = 40;
+  const img = document.createElement('img');
+  img.src = 'assets/animations/tile icons animations/bombanimation.jpg';
+  img.style.cssText = `position:fixed;pointer-events:none;z-index:150;left:${cx}px;top:${cy}px;transform:translate(-50%,-50%);width:${START_SIZE}px;height:${START_SIZE}px;opacity:0;`;
+  document.body.appendChild(img);
+  const start = performance.now();
+  function frame(now) {
+    const t = Math.min((now - start) / DURATION, 1);
+    const size = START_SIZE + (END_SIZE - START_SIZE) * t;
+    const opacity = t < 0.5 ? t * 2 : (1 - t) * 2;
+    img.style.width = `${size}px`;
+    img.style.height = `${size}px`;
+    img.style.opacity = String(opacity);
+    if (t < 1) { requestAnimationFrame(frame); } else { img.remove(); }
+  }
+  requestAnimationFrame(frame);
+}
+
 async function fireBomb(centerRow, centerCol) {
   if (!bombModeActive) return;
   const inv = JSON.parse(localStorage.getItem('candyInventory') || '{}');
@@ -99,6 +120,12 @@ async function fireBomb(centerRow, centerCol) {
   localStorage.setItem('candyInventory', JSON.stringify(inv));
   cancelBombMode();
   isAnimating = true;
+
+  const cellEl = getCellElement(centerRow, centerCol);
+  if (cellEl) {
+    const rect = cellEl.getBoundingClientRect();
+    showBombBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  }
 
   const affected = [];
   for (let r = centerRow - 1; r <= centerRow + 1; r++) {
@@ -152,6 +179,7 @@ async function fireBomb(centerRow, centerCol) {
     }
   }
 
+  await sleep(100);
   renderGrid(newCells);
   await sleep(320);
 
@@ -366,6 +394,7 @@ async function fireLightning(row, col) {
     }
   }
 
+  await sleep(100);
   renderGrid(newCells);
   await sleep(320);
 
@@ -469,7 +498,7 @@ function generateGridShape(level) {
     const edgeDist = Math.min(col, GRID_SIZE - 1 - col);
     let disabledBottom = 0;
     if (shapeType === 'triangle') {
-      // Inverted triangle: outer cols lose more rows at bottom, converging to center point
+      // Triangle: outer cols lose more rows at bottom; outermost cols lose 3
       disabledBottom = Math.max(0, 3 - edgeDist);
     } else {
       // Valley (two inverted right-angle triangles): center cols lose rows, corners stay full
@@ -487,7 +516,7 @@ function generateGridShape(level) {
       const edgeDist = Math.min(col, GRID_SIZE - 1 - col);
       let disabledTop = 0;
       if (shapeType === 'triangle') {
-        disabledTop = Math.max(0, 2 - edgeDist);
+        disabledTop = edgeDist === 0 ? 0 : Math.max(0, 2 - edgeDist);
       } else {
         const distFromCenter = Math.abs(col - (GRID_SIZE / 2 - 0.5));
         disabledTop = distFromCenter < 1 ? 2 : distFromCenter < 2 ? 1 : 0;
