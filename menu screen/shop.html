@@ -13,22 +13,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #000;
-    }
-
-    body.fade-out::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background: #000;
-      opacity: 1;
-      z-index: 9999;
-      animation: fadeInBlack 0.3s ease-out forwards;
-    }
-
-    @keyframes fadeInBlack {
-      from { opacity: 0; }
-      to { opacity: 1; }
+      background: #6a4f2f;
     }
 
     #shop-screen {
@@ -436,8 +421,7 @@
 
     function goBack() {
       playClick();
-      document.body.classList.add('fade-out');
-      setTimeout(() => window.location.href = 'index.html', 300);
+      window.location.href = 'index.html';
     }
 
     const BOOSTER_DATA = [
@@ -453,7 +437,7 @@
       { name: 'Morning Dew',      id: 'bg_morning_dew',      path: '../assets/backgrounds/bg_morning_dew.png',      unlockLevel: 3,  price: 450,  coinMult: 1.5, desc: 'Misty meadows kissed by the first light of dawn. Dewdrops sparkle on grass while nature awakens peacefully.' },
       { name: 'Shaded Grove',     id: 'bg_shaded_grove',     path: '../assets/backgrounds/bg_shaded_grove.png',     unlockLevel: 5,  price: 800,  coinMult: 1.8, desc: 'A cool forest sanctuary where ancient trees form a protective canopy. Dappled sunlight filters through leafy branches.' },
       { name: 'Sunlit Garden',    id: 'bg_sunlit_garden',    path: '../assets/backgrounds/bg_sunlit_garden.png',    unlockLevel: 8,  price: 1400, coinMult: 2.2, desc: 'A radiant garden bursting with color, where sunlight dances across blooming flowers and lush green foliage.' },
-      { name: 'Wildflower Patch', id: 'bg_wildflower_patch', path: '../assets/backgrounds/bg_wildflower_patch.png', unlockLevel: 10, price: 2000, coinMult: 2.5, desc: 'A breathtaking sea of wildflowers in every color imaginable. Nature\'s canvas unfolds in this magnificent botanical wonder.' },
+      { name: 'Wildflower Patch', id: 'bg_wildflower_patch', path: '../assets/backgrounds/bg_wildflower_patch.png', unlockLevel: 10, price: 2500, coinMult: 3.0, desc: 'A breathtaking sea of wildflowers in every color imaginable. Nature\'s canvas unfolds in this magnificent botanical wonder.' },
     ];
 
     let coins = 0, inventory = {}, unlockedBgs = new Set(), currentLevel = 1;

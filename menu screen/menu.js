@@ -623,9 +623,9 @@ document.addEventListener('DOMContentLoaded', () => {
     openPopup('popup-difficulty');
   });
   setupButton('btn-settings', BASE + 'settings_idle.png', null,                            () => openPopup('popup-settings'));
-  setupButton('btn-home',     BASE + 'home_idle.png',     null,                            () => setTimeout(() => window.location.href = 'inventory.html', 200));
+  setupButton('btn-home',     BASE + 'home_idle.png',     null,                            () => { window.location.href = 'inventory.html'; });
   setupButton('btn-quests',   BASE + 'quests_idle.png',   null,                            () => { renderQuests(); openPopup('popup-quests'); });
-  setupButton('btn-shop',     BASE + 'shop_idle.png',     null,                            () => setTimeout(() => window.location.href = 'shop.html', 200));
+  setupButton('btn-shop',     BASE + 'shop_idle.png',     null,                            () => { window.location.href = 'shop.html'; });
 
   document.getElementById('popup-settings')?.addEventListener('click', (e) => {
     if (e.target.id === 'popup-settings') closePopup('popup-settings');
@@ -653,5 +653,29 @@ document.addEventListener('DOMContentLoaded', () => {
       window.location.href = `../index.html?autostart=1&difficulty=${difficulty}`;
     });
   });
+
+  // Background switch welcome toast
+  const bgJustSwitched = sessionStorage.getItem('bgJustSwitched');
+  if (bgJustSwitched) {
+    sessionStorage.removeItem('bgJustSwitched');
+    const BG_NAMES = {
+      'bg_lush_meadow': 'Lush Meadow',
+      'bg_autumn_garden': 'Autumn Garden',
+      'bg_morning_dew': 'Morning Dew',
+      'bg_shaded_grove': 'Shaded Grove',
+      'bg_sunlit_garden': 'Sunlit Garden',
+      'bg_wildflower_patch': 'Wildflower Patch'
+    };
+    setTimeout(() => {
+      const toast = document.getElementById('bg-toast');
+      if (toast) {
+        const bgName = BG_NAMES[bgJustSwitched] || 'your new background';
+        toast.textContent = `Welcome to ${bgName} 🌿`;
+        toast.classList.remove('show');
+        void toast.offsetWidth;
+        toast.classList.add('show');
+      }
+    }, 100);
+  }
 
 });

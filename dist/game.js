@@ -1437,7 +1437,7 @@ const BG_COIN_MULTIPLIERS = {
   'bg_morning_dew':      1.5,
   'bg_shaded_grove':     1.8,
   'bg_sunlit_garden':    2.2,
-  'bg_wildflower_patch': 2.5,
+  'bg_wildflower_patch': 3.0,
 };
 
 function showWinScreen() {
@@ -1484,7 +1484,6 @@ function showWinScreen() {
   localStorage.setItem('candyCoins', String(currentCoins + totalCoinsEarned));
 
   // Quest progress
-  const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
   updateQuestProgress('win1', 1);
   updateQuestProgress('win5', 1);
   updateQuestProgress('win10', 1);
@@ -1947,11 +1946,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('objective-screen')?.classList.remove('hidden');
     startGame();
     showObjectiveScreen(difficulty);
-    requestAnimationFrame(() => {
-      document.getElementById('loading-overlay')?.classList.remove('active');
-    });
-  } else {
-    document.getElementById('loading-overlay')?.classList.remove('active');
   }
 
   document.getElementById('menu-play')?.addEventListener('click', () => {

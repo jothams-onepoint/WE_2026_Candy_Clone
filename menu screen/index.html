@@ -9,6 +9,7 @@
 <body>
   <canvas id="bg-canvas"></canvas>
   <div id="menu-screen">
+    <div id="bg-toast" class="bg-toast"></div>
     <div class="menu-content">
 
       <!-- Floating elements -->
@@ -82,9 +83,15 @@
 
       <!-- Bottom bar: Quests · Home · Shop -->
       <div id="bottom-bar">
-        <img id="btn-quests" class="menu-btn icon-btn" draggable="false" alt="Quests">
-        <img id="btn-home"   class="menu-btn icon-btn" draggable="false" alt="Home">
-        <img id="btn-shop"   class="menu-btn icon-btn" draggable="false" alt="Shop">
+        <div class="icon-wrap" id="wrap-quests" data-label="Quests">
+          <img id="btn-quests" class="menu-btn icon-btn" draggable="false" alt="Quests">
+        </div>
+        <div class="icon-wrap" id="wrap-home" data-label="Your Collection">
+          <img id="btn-home" class="menu-btn icon-btn" draggable="false" alt="Home">
+        </div>
+        <div class="icon-wrap" id="wrap-shop" data-label="Shop">
+          <img id="btn-shop" class="menu-btn icon-btn" draggable="false" alt="Shop">
+        </div>
       </div>
 
     </div>
