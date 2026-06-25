@@ -114,6 +114,27 @@ function highlightBombArea(centerRow: number, centerCol: number): void {
   }
 }
 
+function showBombBurst(cx: number, cy: number): void {
+  const DURATION = 275;
+  const END_SIZE = 650;
+  const START_SIZE = 40;
+  const img = document.createElement('img');
+  img.src = 'assets/animations/tile icons animations/bombanimation.png';
+  img.style.cssText = `position:fixed;pointer-events:none;z-index:150;left:${cx}px;top:${cy}px;transform:translate(-50%,-50%);width:${START_SIZE}px;height:${START_SIZE}px;opacity:0;`;
+  document.body.appendChild(img);
+  const start = performance.now();
+  function frame(now: number): void {
+    const t = Math.min((now - start) / DURATION, 1);
+    const size = START_SIZE + (END_SIZE - START_SIZE) * t;
+    const opacity = t < 0.5 ? t * 2 : (1 - t) * 2;
+    img.style.width = `${size}px`;
+    img.style.height = `${size}px`;
+    img.style.opacity = String(opacity);
+    if (t < 1) { requestAnimationFrame(frame); } else { img.remove(); }
+  }
+  requestAnimationFrame(frame);
+}
+
 async function fireBomb(centerRow: number, centerCol: number): Promise<void> {
   if (!bombModeActive) return;
   const inv: Record<string, number> = JSON.parse(localStorage.getItem('candyInventory') || '{}');
@@ -123,6 +144,12 @@ async function fireBomb(centerRow: number, centerCol: number): Promise<void> {
   updateQuestProgress('booster3', 1);
   cancelBombMode();
   isAnimating = true;
+
+  const cellEl = getCellElement(centerRow, centerCol);
+  if (cellEl) {
+    const rect = cellEl.getBoundingClientRect();
+    showBombBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  }
 
   const affected: { row: number; col: number }[] = [];
   for (let r = centerRow - 1; r <= centerRow + 1; r++) {
@@ -176,6 +203,7 @@ async function fireBomb(centerRow: number, centerCol: number): Promise<void> {
     }
   }
 
+  await sleep(100);
   renderGrid(newCells);
   await sleep(320);
 
@@ -391,6 +419,7 @@ async function fireLightning(row: number, col: number): Promise<void> {
     }
   }
 
+  await sleep(100);
   renderGrid(newCells);
   await sleep(320);
 
@@ -411,7 +440,7 @@ function activateBooster(id: string): void {
   localStorage.setItem('candyInventory', JSON.stringify(inv));
   updateQuestProgress('booster3', 1);
   switch (id) {
-    case 'color-blast': moveCap += 15; updateMovesDisplay(); break;
+    case 'color-blast': moveCap += 5; updateMovesDisplay(); break;
   }
   renderBoosterBar();
 }
@@ -510,7 +539,7 @@ function generateGridShape(level: number): boolean[][] | null {
       const edgeDist = Math.min(col, GRID_SIZE - 1 - col);
       let disabledTop = 0;
       if (shapeType === 'triangle') {
-        disabledTop = Math.max(0, 2 - edgeDist);
+        disabledTop = edgeDist === 0 ? 0 : Math.max(0, 2 - edgeDist);
       } else {
         const distFromCenter = Math.abs(col - (GRID_SIZE / 2 - 0.5));
         disabledTop = distFromCenter < 1 ? 2 : distFromCenter < 2 ? 1 : 0;
@@ -1049,7 +1078,7 @@ async function processMatches(depth = 0): Promise<void> {
     showBreakAnimation(r, c);
   });
 
-  await sleep(300);
+  await sleep(215);
 
   // Apply gravity and refill — only within active cells per column
   const newCells = new Set<string>();
@@ -1397,6 +1426,13 @@ const BG_COIN_MULTIPLIERS: Record<string, number> = {
 
 function showWinScreen(): void {
   stopTimer();
+  const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
+  const elapsed = savedMaxTime - timeLeft;
+  const bestKey = `candyBestTime_${diff}`;
+  const prevBest = parseInt(localStorage.getItem(bestKey) || '');
+  if (isNaN(prevBest) || elapsed < prevBest) {
+    localStorage.setItem(bestKey, String(elapsed));
+  }
   removeUrgencyEffects();
   const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
   const currentTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');

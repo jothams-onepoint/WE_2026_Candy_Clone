@@ -148,21 +148,39 @@
     <div class="popup-content difficulty-modal">
       <h2>⏱️ SELECT DIFFICULTY</h2>
       <div class="popup-body difficulty-body">
-        <button class="difficulty-btn easy-btn" data-difficulty="easy">
-          <div class="difficulty-emoji">🟢</div>
-          <div class="difficulty-name">EASY</div>
-          <div class="difficulty-time">120 seconds</div>
-        </button>
-        <button class="difficulty-btn medium-btn" data-difficulty="medium">
-          <div class="difficulty-emoji">🟡</div>
-          <div class="difficulty-name">MEDIUM</div>
-          <div class="difficulty-time">90 seconds</div>
-        </button>
-        <button class="difficulty-btn hard-btn" data-difficulty="hard">
-          <div class="difficulty-emoji">🔴</div>
-          <div class="difficulty-name">HARD</div>
-          <div class="difficulty-time">60 seconds</div>
-        </button>
+        <div class="difficulty-row">
+          <button class="difficulty-btn easy-btn" data-difficulty="easy">
+            <div class="difficulty-emoji">🟢</div>
+            <div class="difficulty-name">EASY</div>
+            <div class="difficulty-time">120 seconds</div>
+          </button>
+          <div class="difficulty-best" id="best-easy">
+            <div class="best-label">BEST TIME</div>
+            <div class="best-value">—</div>
+          </div>
+        </div>
+        <div class="difficulty-row">
+          <button class="difficulty-btn medium-btn" data-difficulty="medium">
+            <div class="difficulty-emoji">🟡</div>
+            <div class="difficulty-name">MEDIUM</div>
+            <div class="difficulty-time">90 seconds</div>
+          </button>
+          <div class="difficulty-best" id="best-medium">
+            <div class="best-label">BEST TIME</div>
+            <div class="best-value">—</div>
+          </div>
+        </div>
+        <div class="difficulty-row">
+          <button class="difficulty-btn hard-btn" data-difficulty="hard">
+            <div class="difficulty-emoji">🔴</div>
+            <div class="difficulty-name">HARD</div>
+            <div class="difficulty-time">60 seconds</div>
+          </button>
+          <div class="difficulty-best" id="best-hard">
+            <div class="best-label">BEST TIME</div>
+            <div class="best-value">—</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
