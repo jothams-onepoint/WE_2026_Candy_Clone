@@ -35,6 +35,26 @@ let savedBgIndex = 0;
 let gridShape: boolean[][] | null = null;
 let savedGridShape: boolean[][] | null = null;
 
+function recalcCellSize(): void {
+  const n = GRID_SIZE || 8;
+  const availW = Math.max(window.innerWidth - 360, n * 48);
+  const availH = Math.max(window.innerHeight - 220, n * 48);
+  const cell = Math.max(48, Math.min(88, Math.floor(Math.min(availW / n, availH / n))));
+  document.documentElement.style.setProperty('--cell', `${cell}px`);
+}
+
+function updateQuestProgress(questId: string, value: number, mode: 'increment' | 'max' = 'increment'): void {
+  const dailyQuests: string[] = JSON.parse(localStorage.getItem('dailyQuests') || '[]');
+  if (!dailyQuests.includes(questId)) return;
+  const progress: Record<string, number> = JSON.parse(localStorage.getItem('questProgress') || '{}');
+  if (mode === 'max') {
+    progress[questId] = Math.max(progress[questId] || 0, value);
+  } else {
+    progress[questId] = (progress[questId] || 0) + value;
+  }
+  localStorage.setItem('questProgress', JSON.stringify(progress));
+}
+
 let bombModeActive = false;
 let bombCursorMoveHandler: ((e: MouseEvent) => void) | null = null;
 let lightningModeActive = false;
@@ -100,6 +120,7 @@ async function fireBomb(centerRow: number, centerCol: number): Promise<void> {
   if (!inv['bomb'] || inv['bomb'] <= 0) { cancelBombMode(); return; }
   inv['bomb']--;
   localStorage.setItem('candyInventory', JSON.stringify(inv));
+  updateQuestProgress('booster3', 1);
   cancelBombMode();
   isAnimating = true;
 
@@ -321,6 +342,7 @@ async function fireLightning(row: number, col: number): Promise<void> {
   if (!inv['lightning'] || inv['lightning'] <= 0) { cancelLightningMode(); return; }
   inv['lightning']--;
   localStorage.setItem('candyInventory', JSON.stringify(inv));
+  updateQuestProgress('booster3', 1);
   cancelLightningMode();
   isAnimating = true;
 
@@ -387,6 +409,7 @@ function activateBooster(id: string): void {
   if (id === 'lightning') { enterLightningMode(); return; }
   inv[id]--;
   localStorage.setItem('candyInventory', JSON.stringify(inv));
+  updateQuestProgress('booster3', 1);
   switch (id) {
     case 'color-blast': moveCap += 15; updateMovesDisplay(); break;
   }
@@ -533,7 +556,7 @@ function generateGoldGrid(): boolean[][] {
 function renderGrid(newCells?: Set<string>): void {
   const container = document.getElementById('game-grid');
   if (!container) return;
-  (container as HTMLElement).style.gridTemplateColumns = `repeat(${GRID_SIZE}, 68px)`;
+  (container as HTMLElement).style.gridTemplateColumns = `repeat(${GRID_SIZE}, var(--cell))`;
   container.innerHTML = '';
   for (let row = 0; row < GRID_SIZE; row++) {
     for (let col = 0; col < GRID_SIZE; col++) {
@@ -1252,9 +1275,7 @@ function showLevelUpFlourish(oldLevel: number, newLevel: number): void {
 
   if (!levelDisplay) return;
 
-  const rect = levelDisplay.getBoundingClientRect();
-  const targetX = rect.left + rect.width / 2;
-  const targetY = rect.top + rect.height / 2;
+  // Snapshot center NOW for the old-level and particles (screen-center based, always safe)
   const centerX = window.innerWidth / 2;
   const centerY = window.innerHeight / 2;
 
@@ -1281,11 +1302,18 @@ function showLevelUpFlourish(oldLevel: number, newLevel: number): void {
   }
 
   setTimeout(() => {
+    // Re-measure at animation time so window resize/maximize is accounted for
+    const liveRect = levelDisplay.getBoundingClientRect();
+    const liveTargetX = liveRect.left + liveRect.width / 2;
+    const liveTargetY = liveRect.top + liveRect.height / 2;
+    const liveCenterX = window.innerWidth / 2;
+    const liveCenterY = window.innerHeight / 2;
+
     const newLevelEl = document.createElement('div');
     newLevelEl.className = 'flourish-new-level';
     newLevelEl.textContent = String(newLevel);
-    newLevelEl.style.setProperty('--glide-x', (targetX - centerX) + 'px');
-    newLevelEl.style.setProperty('--glide-y', (targetY - centerY) + 'px');
+    newLevelEl.style.setProperty('--glide-x', (liveTargetX - liveCenterX) + 'px');
+    newLevelEl.style.setProperty('--glide-y', (liveTargetY - liveCenterY) + 'px');
     document.body.appendChild(newLevelEl);
 
     if (progressBar) {
@@ -1358,6 +1386,15 @@ function celebrateWin(leveledUp: boolean): void {
   }
 }
 
+const BG_COIN_MULTIPLIERS: Record<string, number> = {
+  'bg_lush_meadow':      1.0,
+  'bg_autumn_garden':    1.2,
+  'bg_morning_dew':      1.5,
+  'bg_shaded_grove':     1.8,
+  'bg_sunlit_garden':    2.2,
+  'bg_wildflower_patch': 2.5,
+};
+
 function showWinScreen(): void {
   stopTimer();
   removeUrgencyEffects();
@@ -1365,8 +1402,11 @@ function showWinScreen(): void {
   const currentTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');
   const currentCoins = parseInt(localStorage.getItem('candyCoins') || '0');
 
+  const selectedBg = localStorage.getItem('candySelectedBg') || 'bg_lush_meadow';
+  const bgMultiplier = BG_COIN_MULTIPLIERS[selectedBg] || 1.0;
+
   const baseCoinReward = [0, 75, 150, 300][Math.floor(currentLevel / 5)] || 300;
-  const coinsEarned = getScaledCoins(baseCoinReward, currentLevel);
+  const coinsEarned = Math.round(getScaledCoins(baseCoinReward, currentLevel) * bgMultiplier);
 
   const levelWinsKey = `levelWins_${currentLevel}`;
   const currentLevelWins = parseInt(localStorage.getItem(levelWinsKey) || '0');
@@ -1390,6 +1430,17 @@ function showWinScreen(): void {
   const totalCoinsEarned = coinsEarned + bonusCoins;
   localStorage.setItem('candyWinTarget', String(currentTarget + 50));
   localStorage.setItem('candyCoins', String(currentCoins + totalCoinsEarned));
+
+  // Quest progress
+  const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
+  updateQuestProgress('win1', 1);
+  updateQuestProgress('win5', 1);
+  updateQuestProgress('win10', 1);
+  if (diff === 'medium') updateQuestProgress('medium1', 1);
+  if (diff === 'hard') updateQuestProgress('hard5', 1);
+  updateQuestProgress('points200', points, 'max');
+  updateQuestProgress('points1000', points, 'max');
+  updateQuestProgress('points2500', points, 'max');
 
   if (leveledUp) {
     localStorage.setItem('pendingLevelUp', JSON.stringify({
@@ -1506,6 +1557,7 @@ function startGame(): void {
   savedIconSet = gameIconSet;
   gridShape = generateGridShape(currentLevel);
   savedGridShape = gridShape;
+  recalcCellSize();
   gameGrid = generateGrid();
   savedGrid = gameGrid.map(row => [...row]);
   goldGrid = generateGoldGrid();
@@ -1661,6 +1713,7 @@ function resetGame(): void {
   gameIconSet = savedIconSet;
   gridShape = savedGridShape;
   GRID_SIZE = gridShape ? 7 : 8;
+  recalcCellSize();
   gameGrid = savedGrid.map(row => [...row]);
   goldGrid = savedGoldGrid.map(row => [...row]);
   renderGrid();
@@ -1809,6 +1862,10 @@ function setupDragHandlers(): void {
     handleDragEnd(touch.clientX, touch.clientY);
   });
 }
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('game-grid')?.children.length) recalcCellSize();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize animated background

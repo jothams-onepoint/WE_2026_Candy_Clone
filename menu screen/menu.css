@@ -765,20 +765,21 @@ html, body {
   position: fixed;
   z-index: 1;
   font-size: clamp(20px, 4vmin, 32px);
-  opacity: 0.8;
-  pointer-events: none;
+  opacity: 0.85;
+  pointer-events: auto;
+  user-select: none;
 }
 
 .particle-upper.bee {
-  animation: bee-oscillate calc(2.2s + (var(--seed, 0) * 0.3s)) infinite ease-in-out;
+  animation: bee-oscillate calc(1.8s + (var(--seed, 0) * 0.25s)) infinite ease-in-out;
 }
 
 .particle-upper.petal {
-  animation: petal-drift calc(6s + (var(--seed, 0) * 1.2s)) infinite ease-in-out;
+  animation: petal-drift calc(4.5s + (var(--seed, 0) * 0.9s)) infinite ease-in-out;
 }
 
 .particle-lower.snail {
-  animation: snail-oscillate calc(8s + (var(--seed, 0) * 2s)) infinite ease-in-out;
+  animation: snail-oscillate calc(7s + (var(--seed, 0) * 1.8s)) infinite ease-in-out;
 }
 
 /* Lower particles (flowers, ground insects) */
@@ -786,55 +787,65 @@ html, body {
   position: fixed;
   z-index: 1;
   font-size: clamp(18px, 3.5vmin, 28px);
-  opacity: 0.75;
-  pointer-events: none;
+  opacity: 0.8;
+  pointer-events: auto;
+  user-select: none;
 }
 
 .particle-lower.leaf {
-  animation: leaf-oscillate calc(5.5s + (var(--seed, 0) * 1.2s)) infinite ease-in-out;
+  animation: leaf-oscillate calc(4.2s + (var(--seed, 0) * 1s)) infinite ease-in-out;
 }
 
 .particle-lower.beetle {
-  animation: beetle-oscillate calc(6.5s + (var(--seed, 0) * 1.3s)) infinite ease-in-out;
+  animation: beetle-oscillate calc(5.5s + (var(--seed, 0) * 1.1s)) infinite ease-in-out;
 }
 
 .particle-lower.snail {
-  animation: snail-oscillate calc(9s + (var(--seed, 0) * 2.5s)) infinite ease-in-out;
+  animation: snail-oscillate calc(7s + (var(--seed, 0) * 1.8s)) infinite ease-in-out;
 }
 
-/* Animations */
+/* Dynamic Animations */
 @keyframes bee-oscillate {
-  0%, 100% { transform: translateX(0) translateY(0) scaleX(1); }
-  15% { transform: translateX(32px) translateY(-20px) scaleX(1); }
-  30% { transform: translateX(18px) translateY(8px) scaleX(1); }
-  50% { transform: translateX(0) translateY(0) scaleX(1); }
-  70% { transform: translateX(-32px) translateY(-18px) scaleX(-1); }
-  85% { transform: translateX(-16px) translateY(10px) scaleX(-1); }
+  0%, 100% { transform: translateX(0) translateY(0) scaleX(1) scale(1); }
+  12% { transform: translateX(48px) translateY(-32px) scaleX(1) scale(1.1); }
+  25% { transform: translateX(28px) translateY(12px) scaleX(1) scale(0.95); }
+  40% { transform: translateX(8px) translateY(-16px) scaleX(1) scale(1.05); }
+  50% { transform: translateX(0) translateY(0) scaleX(1) scale(1); }
+  62% { transform: translateX(-48px) translateY(-28px) scaleX(-1) scale(1.1); }
+  75% { transform: translateX(-24px) translateY(14px) scaleX(-1) scale(0.95); }
+  88% { transform: translateX(-8px) translateY(-12px) scaleX(-1) scale(1.05); }
 }
-
 
 @keyframes leaf-oscillate {
-  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
-  25% { transform: translateX(20px) translateY(-3px) rotate(-12deg); }
-  50% { transform: translateX(0) translateY(0) rotate(0deg); }
-  75% { transform: translateX(-20px) translateY(-2px) rotate(12deg); }
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg) scale(1); }
+  20% { transform: translateX(32px) translateY(-8px) rotate(-22deg) scale(1.08); }
+  35% { transform: translateX(18px) translateY(6px) rotate(-8deg) scale(0.96); }
+  50% { transform: translateX(0) translateY(0) rotate(0deg) scale(1); }
+  65% { transform: translateX(-32px) translateY(-6px) rotate(22deg) scale(1.08); }
+  80% { transform: translateX(-16px) translateY(8px) rotate(10deg) scale(0.96); }
 }
 
 @keyframes beetle-oscillate {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  25% { transform: translateX(8px) translateY(-2px); }
-  50% { transform: translateX(0) translateY(0); }
-  75% { transform: translateX(-8px) translateY(-2px); }
+  0%, 100% { transform: translateX(0) translateY(0) scale(1); }
+  25% { transform: translateX(14px) translateY(-5px) scale(1.06); }
+  40% { transform: translateX(6px) translateY(3px) scale(0.98); }
+  50% { transform: translateX(0) translateY(0) scale(1); }
+  60% { transform: translateX(-14px) translateY(-5px) scale(1.06); }
+  75% { transform: translateX(-6px) translateY(3px) scale(0.98); }
 }
 
 @keyframes petal-drift {
-  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
-  25% { transform: translateX(22px) translateY(-18px) rotate(20deg); }
-  50% { transform: translateX(8px) translateY(6px) rotate(-5deg); }
-  75% { transform: translateX(-22px) translateY(-12px) rotate(-20deg); }
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg) scale(1); }
+  15% { transform: translateX(36px) translateY(-28px) rotate(35deg) scale(1.12); }
+  30% { transform: translateX(16px) translateY(8px) rotate(-12deg) scale(0.94); }
+  45% { transform: translateX(-8px) translateY(-18px) rotate(15deg) scale(1.05); }
+  60% { transform: translateX(-36px) translateY(-20px) rotate(-35deg) scale(1.12); }
+  75% { transform: translateX(-12px) translateY(10px) rotate(12deg) scale(0.94); }
 }
 
 @keyframes snail-oscillate {
-  0%, 100% { transform: translateX(0) translateY(0); }
-  50% { transform: translateX(6px) translateY(-1px); }
+  0%, 100% { transform: translateX(0) translateY(0) scale(1); }
+  25% { transform: translateX(10px) translateY(-2px) scale(1.04); }
+  50% { transform: translateX(0) translateY(0) scale(1); }
+  75% { transform: translateX(-10px) translateY(-2px) scale(1.04); }
 }

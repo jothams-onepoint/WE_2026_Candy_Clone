@@ -28,25 +28,6 @@ function showLevelUpFlourish(oldLevel, newLevel, coinsEarned, isMilestone) {
       80%  { opacity: 0.5; }
       100% { transform: translate(var(--px),var(--py)) scale(0); opacity: 0; }
     }
-    @keyframes fBarShake {
-      0%,100% { transform: translateX(0) scale(1); }
-      10% { transform: translateX(-16px) scale(1.04); }
-      22% { transform: translateX( 16px) scale(0.96); }
-      34% { transform: translateX(-12px) scale(1.03); }
-      46% { transform: translateX( 12px) scale(0.97); }
-      58% { transform: translateX( -7px); }
-      70% { transform: translateX(  7px); }
-      84% { transform: translateX( -3px); }
-    }
-    @keyframes fBarGlow {
-      0%,100% { box-shadow: none; }
-      40% { box-shadow: 0 0 40px rgba(255,215,0,0.9), 0 0 80px rgba(255,165,0,0.4); }
-    }
-    @keyframes fNumFlash {
-      0%   { transform: scale(1); filter: none; }
-      35%  { transform: scale(2.4); filter: drop-shadow(0 0 30px rgba(255,215,0,1)) brightness(2.5); color: #ffd700; }
-      100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(255,215,0,0.5)); color: #ffd700; }
-    }
     @keyframes fPopupIn {
       0%   { transform: translate(-50%,-50%) translateY(90px) scale(0.78); opacity: 0; }
       60%  { transform: translate(-50%,-50%) translateY(-18px) scale(1.04); opacity: 1; }
@@ -86,7 +67,21 @@ function showLevelUpFlourish(oldLevel, newLevel, coinsEarned, isMilestone) {
       ${extra || ''}`;
   }
 
+  // Track all created elements for cleanup
+  const flourishEls = [];
+
+  let cancelled = false;
+  function cancelFlourish() {
+    if (cancelled) return;
+    cancelled = true;
+    flourishEls.forEach(el => { try { el.remove(); } catch(_) {} });
+    overlay.style.transition = 'opacity 0.25s ease';
+    overlay.style.opacity = '0';
+    setTimeout(() => { try { overlay.remove(); style.remove(); } catch(_) {} }, 260);
+  }
+
   setTimeout(() => {
+    if (cancelled) return;
     const CX = window.innerWidth / 2;
     const CY = window.innerHeight / 2;
     const offX = startX - CX;
@@ -101,9 +96,11 @@ function showLevelUpFlourish(oldLevel, newLevel, coinsEarned, isMilestone) {
        transition:transform 0.65s cubic-bezier(0.34,1.3,0.64,1),opacity 0.6s,filter 0.6s;`
     ));
     oldEl.textContent = String(oldLevel);
+    flourishEls.push(oldEl);
 
     // Rise to center
     requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (cancelled) return;
       oldEl.style.transform = 'translate(-50%,-50%) scale(1)';
       oldEl.style.opacity = '1';
       oldEl.style.filter = 'blur(0)';
@@ -111,17 +108,20 @@ function showLevelUpFlourish(oldLevel, newLevel, coinsEarned, isMilestone) {
 
     // Hover at center
     setTimeout(() => {
+      if (cancelled) return;
       oldEl.style.transition = 'none';
       oldEl.style.animation = 'fHoverCenter 0.48s ease-in-out 1';
     }, 780);
 
     // Shake
     setTimeout(() => {
+      if (cancelled) return;
       oldEl.style.animation = 'fShakeCenter 0.5s ease-in-out forwards';
     }, 1260);
 
     // Explode → particles + gold number at same center
     setTimeout(() => {
+      if (cancelled) return;
       const CX2 = window.innerWidth / 2;
       const CY2 = window.innerHeight / 2;
 
@@ -143,6 +143,7 @@ function showLevelUpFlourish(oldLevel, newLevel, coinsEarned, isMilestone) {
           --px:${px}px;--py:${py}px;
           animation:fParticle ${dur}s ease-out ${del}s forwards;`);
         p.textContent = emojis[i % emojis.length];
+        flourishEls.push(p);
         setTimeout(() => p.remove(), (parseFloat(dur) + parseFloat(del)) * 1000 + 150);
       }
 
@@ -155,57 +156,39 @@ function showLevelUpFlourish(oldLevel, newLevel, coinsEarned, isMilestone) {
          transition:transform 0.62s cubic-bezier(0.34,1.4,0.64,1),opacity 0.58s,filter 0.58s;`
       ));
       goldEl.textContent = String(newLevel);
+      flourishEls.push(goldEl);
 
       requestAnimationFrame(() => requestAnimationFrame(() => {
+        if (cancelled) return;
         goldEl.style.transform = 'translate(-50%,-50%) scale(1)';
         goldEl.style.opacity = '1';
         goldEl.style.filter = 'blur(0)';
       }));
       setTimeout(() => oldEl.remove(), 500);
 
-      // Fly to progress bar — recalculate target AT FLY TIME
+      // Gold number shines for a moment, then fades out as popup appears
       setTimeout(() => {
-        goldEl.style.transition = 'none';
-        void goldEl.offsetWidth;
+        if (cancelled) return;
+        goldEl.style.transition = 'opacity 0.7s ease, transform 0.7s ease';
+        goldEl.style.opacity = '0';
+        goldEl.style.transform = 'translate(-50%,-50%) scale(1.35)';
 
-        // Fresh positions at fly time (handles any resize that happened)
-        const goldRect = goldEl.getBoundingClientRect();
-        const goldVisCX = goldRect.left + goldRect.width / 2;
-        const goldVisCY = goldRect.top + goldRect.height / 2;
-        const freshInfo = infoEl?.getBoundingClientRect();
-        const tgtX = freshInfo ? freshInfo.left + freshInfo.width / 2 : goldVisCX;
-        const tgtY = freshInfo ? freshInfo.top + freshInfo.height / 2 : goldVisCY;
-        const dX = tgtX - goldVisCX;
-        const dY = tgtY - goldVisCY;
-
-        goldEl.style.transition = 'transform 0.78s cubic-bezier(0.4,0,0.15,1),opacity 0.78s,filter 0.78s';
-        goldEl.style.transform = `translate(calc(-50% + ${dX}px),calc(-50% + ${dY}px)) scale(0.38)`;
-        goldEl.style.filter = 'drop-shadow(0 0 40px rgba(255,215,0,1))';
+        // Update level bar quietly in the background
+        if (levelNumEl) levelNumEl.textContent = String(newLevel);
+        const fill = document.getElementById('level-progress-fill');
+        if (fill) fill.style.width = '0%';
 
         setTimeout(() => {
+          if (cancelled) return;
           goldEl.remove();
-
-          if (levelNumEl) {
-            levelNumEl.style.display = 'inline-block';
-            levelNumEl.textContent = String(newLevel);
-            levelNumEl.style.animation = 'fNumFlash 0.65s ease-out forwards';
-            setTimeout(() => { levelNumEl.style.animation = ''; }, 800);
-          }
-          if (infoEl) {
-            infoEl.style.animation = 'fBarShake 0.7s ease-in-out forwards,fBarGlow 0.7s ease-in-out forwards';
-            setTimeout(() => { infoEl.style.animation = ''; }, 800);
-          }
-          const fill = document.getElementById('level-progress-fill');
-          if (fill) { fill.style.transition = 'width 0.6s ease'; fill.style.width = '0%'; }
-
-          overlay.style.transition = 'background 0.5s ease';
+          overlay.style.transition = 'background 0.4s ease';
           overlay.style.background = 'rgba(8,4,22,0.9)';
-
           setTimeout(() => {
+            if (cancelled) return;
             showLevelUpPopup(oldLevel, newLevel, coinsEarned, isMilestone, overlay, style);
-          }, 850);
-        }, 820);
-      }, 850);
+          }, 280);
+        }, 580);
+      }, 1200);
 
     }, 1760); // after shake (1260+500)
   }, 350);
@@ -415,15 +398,43 @@ function getDailyQuests() {
   return daily;
 }
 
+function claimQuestReward(questId) {
+  const coins = parseInt(localStorage.getItem('candyCoins') || '0');
+  const quest = Object.values(QUESTS).flat().find(q => q.id === questId);
+  if (!quest) return;
+  const claimed = JSON.parse(localStorage.getItem('questsClaimed') || '{}');
+  if (claimed[questId]) return;
+  localStorage.setItem('candyCoins', String(coins + quest.reward));
+  claimed[questId] = true;
+  localStorage.setItem('questsClaimed', JSON.stringify(claimed));
+  renderQuests();
+}
+
+function refreshQuests() {
+  localStorage.removeItem('dailyQuests');
+  localStorage.removeItem('questProgress');
+  localStorage.removeItem('questsClaimed');
+  localStorage.setItem('questsDate', '');
+  renderQuests();
+}
+
 function renderQuests() {
   const quests = getDailyQuests();
   const progress = JSON.parse(localStorage.getItem('questProgress') || '{}');
+  const claimed = JSON.parse(localStorage.getItem('questsClaimed') || '{}');
 
   const html = quests.map(quest => {
     const current = progress[quest.id] || 0;
     const percent = Math.min(100, (current / quest.target) * 100);
     const completed = current >= quest.target;
+    const isClaimed = claimed[quest.id];
     const tier = Object.keys(QUESTS).find(t => QUESTS[t].some(q => q.id === quest.id));
+
+    const rewardBtn = completed && !isClaimed
+      ? `<button class="quest-claim-btn" data-quest-id="${quest.id}" style="padding:8px 20px;background:#7af0b0;color:#0a0a0a;border:none;border-radius:6px;font-weight:700;cursor:pointer;transition:all 0.2s;font-size:12px;">Claim ${quest.reward}💰</button>`
+      : isClaimed
+      ? `<div class="quest-reward">Claimed ✓</div>`
+      : `<div class="quest-reward">💰 ${quest.reward} coins</div>`;
 
     return `
       <div class="quest-item ${completed ? 'quest-completed' : ''}">
@@ -440,13 +451,24 @@ function renderQuests() {
           </div>
           <div style="font-size: 11px; color: #999; margin-top: 2px;">${current} / ${quest.target}</div>
         </div>
-        <div class="quest-reward">💰 ${quest.reward} coins ${completed ? '✓' : ''}</div>
+        ${rewardBtn}
       </div>
     `;
   }).join('');
 
   const container = document.getElementById('quests-container');
-  if (container) container.innerHTML = html || '<p style="color:#666;text-align:center;">No quests available</p>';
+  if (container) {
+    const refreshBtn = `<button id="refresh-quests-btn" style="width:100%;padding:12px;background:#ff8c42;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;margin-bottom:16px;transition:all 0.2s;font-size:13px;letter-spacing:1px;">🔄 REFRESH QUESTS</button>`;
+    container.innerHTML = refreshBtn + (html || '<p style="color:#666;text-align:center;">No quests available</p>');
+    document.getElementById('refresh-quests-btn')?.addEventListener('click', refreshQuests);
+    document.getElementById('refresh-quests-btn')?.addEventListener('mouseenter', (e) => { e.target.style.transform = 'scale(1.05)'; e.target.style.boxShadow = '0 6px 20px rgba(255,140,66,0.6)'; });
+    document.getElementById('refresh-quests-btn')?.addEventListener('mouseleave', (e) => { e.target.style.transform = 'scale(1)'; e.target.style.boxShadow = 'none'; });
+    container.querySelectorAll('.quest-claim-btn').forEach(btn => {
+      btn.addEventListener('mouseenter', () => { btn.style.transform = 'scale(1.08)'; btn.style.boxShadow = '0 6px 20px rgba(122,240,176,0.6)'; });
+      btn.addEventListener('mouseleave', () => { btn.style.transform = 'scale(1)'; btn.style.boxShadow = 'none'; });
+      btn.addEventListener('click', () => claimQuestReward(btn.dataset.questId));
+    });
+  }
 }
 
 function updateLevelInfo() {
@@ -478,6 +500,37 @@ document.addEventListener('DOMContentLoaded', () => {
     window.BgSystem.start(bgIdx);
   }
 
+  // Draggable particle system
+  let draggedParticle = null;
+  let dragOffsetX = 0, dragOffsetY = 0;
+  function makeParticleDraggable(p, origX, origY) {
+    p.style.cursor = 'grab';
+    p.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      draggedParticle = p;
+      const rect = p.getBoundingClientRect();
+      dragOffsetX = e.clientX - rect.left;
+      dragOffsetY = e.clientY - rect.top;
+      p.style.animation = 'none';
+      p.style.cursor = 'grabbing';
+      p.style.zIndex = '9999';
+      p.style.filter = 'drop-shadow(0 8px 16px rgba(0,0,0,0.4)) scale(1.2)';
+    });
+  }
+  document.addEventListener('mousemove', (e) => {
+    if (!draggedParticle) return;
+    draggedParticle.style.left = (e.clientX - dragOffsetX) + 'px';
+    draggedParticle.style.top = (e.clientY - dragOffsetY) + 'px';
+  });
+  document.addEventListener('mouseup', () => {
+    if (draggedParticle) {
+      draggedParticle.style.cursor = 'grab';
+      draggedParticle.style.zIndex = '1';
+      draggedParticle.style.filter = 'none';
+      draggedParticle = null;
+    }
+  });
+
   // Upper zone: fast insects, doves, feathers, floating leaves
   const upperTypes = ['🐝','🦗','🐝','🦗','🕊️','🪶','🌿','🐝','🦗','🐝','🦗','🕊️','🪶','🌿','🐝'];
   const upperClass = {'🐝':'bee','🦗':'bee','🕊️':'petal','🪶':'petal','🌿':'petal'};
@@ -486,10 +539,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const type = upperTypes[i];
     p.className = `particle-upper ${upperClass[type] || 'bee'}`;
     p.textContent = type;
-    p.style.left = (i / upperTypes.length * 92 + Math.random() * 6) + 'vw';
-    p.style.top = (Math.random() * 38) + 'vh';
+    const left = i / upperTypes.length * 92 + Math.random() * 6;
+    const top = Math.random() * 35;
+    p.style.left = left + 'vw';
+    p.style.top = top + 'vh';
     p.style.setProperty('--seed', i);
     document.body.appendChild(p);
+    makeParticleDraggable(p, left, top);
   }
 
   // Lower zone: ground insects, leaves, seedlings, rocks
@@ -500,10 +556,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const type = lowerTypes[i];
     p.className = `particle-lower ${lowerClass[type] || 'leaf'}`;
     p.textContent = type;
-    p.style.left = (i / lowerTypes.length * 92 + Math.random() * 6) + 'vw';
-    p.style.top = (72 + Math.random() * 22) + 'vh';
+    const left = i / lowerTypes.length * 92 + Math.random() * 6;
+    const top = 72 + Math.random() * 20;
+    p.style.left = left + 'vw';
+    p.style.top = top + 'vh';
     p.style.setProperty('--seed', i);
     document.body.appendChild(p);
+    makeParticleDraggable(p, left, top);
   }
 
   renderQuests();

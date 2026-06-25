@@ -246,6 +246,21 @@
     .bg-select-btn:hover { background: linear-gradient(135deg, #3d8a4e 0%, #2e6a3c 100%); }
     .bg-select-btn.selected { background: linear-gradient(135deg, #7a3aad 0%, #5a1a8a 100%); cursor: default; }
     .bg-item.bg-selected { border-color: #9933cc; box-shadow: 0 0 10px rgba(150, 50, 220, 0.5); }
+
+    .inv-mult-badge {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      background: linear-gradient(135deg, #f0c040 0%, #d4a020 100%);
+      color: #1a0f00;
+      border-radius: 8px;
+      padding: 2px 7px;
+      font-size: 10px;
+      font-weight: 900;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      pointer-events: none;
+      z-index: 2;
+    }
   </style>
 </head>
 <body>
@@ -291,12 +306,12 @@
     ];
 
     const BG_DATA = [
-      { name: 'Autumn Garden',    id: 'bg_autumn_garden',    path: '../assets/backgrounds/bg_autumn_garden.png'    },
-      { name: 'Lush Meadow',      id: 'bg_lush_meadow',      path: '../assets/backgrounds/bg_lush_meadow.png'      },
-      { name: 'Morning Dew',      id: 'bg_morning_dew',      path: '../assets/backgrounds/bg_morning_dew.png'      },
-      { name: 'Shaded Grove',     id: 'bg_shaded_grove',     path: '../assets/backgrounds/bg_shaded_grove.png'     },
-      { name: 'Sunlit Garden',    id: 'bg_sunlit_garden',    path: '../assets/backgrounds/bg_sunlit_garden.png'    },
-      { name: 'Wildflower Patch', id: 'bg_wildflower_patch', path: '../assets/backgrounds/bg_wildflower_patch.png' },
+      { name: 'Lush Meadow',      id: 'bg_lush_meadow',      path: '../assets/backgrounds/bg_lush_meadow.png',      coinMult: 1.0, desc: 'The ultimate starter backdrop — vibrant green grass and wildflowers under blue skies.' },
+      { name: 'Autumn Garden',    id: 'bg_autumn_garden',    path: '../assets/backgrounds/bg_autumn_garden.png',    coinMult: 1.2, desc: 'A cozy garden painted in warm autumn hues. Golden leaves drift peacefully.' },
+      { name: 'Morning Dew',      id: 'bg_morning_dew',      path: '../assets/backgrounds/bg_morning_dew.png',      coinMult: 1.5, desc: 'Misty meadows kissed by the first light of dawn. Dewdrops sparkle on grass.' },
+      { name: 'Shaded Grove',     id: 'bg_shaded_grove',     path: '../assets/backgrounds/bg_shaded_grove.png',     coinMult: 1.8, desc: 'A cool forest sanctuary where dappled sunlight filters through leafy branches.' },
+      { name: 'Sunlit Garden',    id: 'bg_sunlit_garden',    path: '../assets/backgrounds/bg_sunlit_garden.png',    coinMult: 2.2, desc: 'A radiant garden bursting with color, where sunlight dances across blooming flowers.' },
+      { name: 'Wildflower Patch', id: 'bg_wildflower_patch', path: '../assets/backgrounds/bg_wildflower_patch.png', coinMult: 2.5, desc: "A breathtaking sea of wildflowers in every color imaginable." },
     ];
 
     let inventory = {}, unlockedBgs = new Set();
@@ -344,7 +359,9 @@
           const isSelected = selectedBgId === bg.id;
           return `
             <div class="bg-item${isSelected ? ' bg-selected' : ''}">
-              <div class="bg-preview" style="background-image: url('${bg.path}')"></div>
+              <div class="bg-preview" style="background-image: url('${bg.path}'); position:relative;">
+                <div class="inv-mult-badge">💰 ${bg.coinMult}×</div>
+              </div>
               <div class="bg-name">${bg.name}</div>
               <button class="bg-select-btn${isSelected ? ' selected' : ''}"
                 onclick="${isSelected ? '' : `selectBackground('${bg.id}')`}"
