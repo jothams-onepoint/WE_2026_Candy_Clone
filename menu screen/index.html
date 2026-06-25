@@ -78,7 +78,6 @@
             <polygon points="50,35 50,85 85,60" fill="#fff" class="play-triangle"/>
           </svg>
         </button>
-        <div id="level-display">Level <span id="level-number">1</span></div>
       </div>
 
       <!-- Bottom bar: Quests · Home · Shop -->
@@ -180,9 +179,10 @@
             <div id="level-popup-progress" style="height: 100%; background: linear-gradient(90deg, #7af0b0 0%, #4a9d52 100%); width: 0%; transition: width 0.3s ease;"></div>
           </div>
           <div style="font-size: clamp(13px, 2.3vmin, 16px); font-weight: 700; color: #333; margin-bottom: 8px;">
-            <span id="level-popup-wins">0</span>/3 wins until Level <span id="level-popup-next">2</span>
+            <span id="level-popup-wins">0</span>/<span id="level-popup-wins-needed">3</span> wins until Level <span id="level-popup-next">2</span>
           </div>
           <div style="font-size: 12px; color: #999; font-style: italic;">Click Play to win games and level up!</div>
+          <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd; font-size: clamp(12px, 2vmin, 14px); color: #333; line-height: 1.6;" id="level-popup-rewards"></div>
         </div>
       </div>
       <button class="popup-close">✕ CLOSE</button>
