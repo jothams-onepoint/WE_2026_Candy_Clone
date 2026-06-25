@@ -945,7 +945,7 @@ function showObjectiveScreen(difficulty: string): void {
 
   const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
   const tier = baseTiers[difficulty] || baseTiers.medium;
-  const scaledPoints = tier.basePoints + (currentLevel - 1) * 500;
+  const scaledPoints = tier.basePoints + (currentLevel - 1) * 250;
 
   const titleEl = document.getElementById('objective-title');
   const descEl = document.getElementById('objective-description');
