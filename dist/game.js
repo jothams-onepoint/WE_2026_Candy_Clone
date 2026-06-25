@@ -618,7 +618,7 @@ function renderGrid(newCells) {
 
       const img = document.createElement('img');
       if (isSpecial) {
-        img.src = `assets/tile icons/special_tiles/${icon === 'bomb_special' ? 'bomb icon.jpg' : 'shears icon.png'}`;
+        img.src = `assets/tile icons/special_tiles/${icon === 'bomb_special' ? 'bomb icon.png' : 'shears icon.png'}`;
       } else {
         img.src = `assets/tile icons/${cellSet}/${icon}.png`;
       }
@@ -644,12 +644,12 @@ function updateCellDOM(row, col) {
   const cellSet = isGold ? 'Tile_icons_gold' : gameIconSet;
   const img = cell.querySelector('img');
   if (isSpecial) {
-    img.src = `assets/tile icons/special_tiles/${icon === 'bomb_special' ? 'bomb icon.jpg' : 'shears icon.png'}`;
+    img.src = `assets/tile icons/special_tiles/${icon === 'bomb_special' ? 'bomb icon.png' : 'shears icon.png'}`;
   } else {
     img.src = `assets/tile icons/${cellSet}/${icon}.png`;
   }
-  img.alt = icon;
-  cell.dataset.icon = icon;
+  img.alt = icon ?? '';
+  cell.dataset.icon = icon ?? '';
   if (isGold) cell.dataset.gold = 'true'; else delete cell.dataset.gold;
   if (isSpecial) cell.classList.add('special-tile'); else cell.classList.remove('special-tile');
 }
@@ -1717,7 +1717,6 @@ function showWinScreen() {
   localStorage.setItem('candyCoins', String(currentCoins + totalCoinsEarned));
 
   // Quest progress
-  const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
   updateQuestProgress('win1', 1);
   updateQuestProgress('win5', 1);
   updateQuestProgress('win10', 1);

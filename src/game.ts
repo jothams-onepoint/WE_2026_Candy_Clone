@@ -1,3 +1,7 @@
+interface Window {
+  BgSystem?: { init(): void; start(index: number): void };
+}
+
 type IconName = 'ant' | 'blue_flower' | 'grass' | 'potted_plant' | 'red_flower' | 'shovel' | 'bomb_special' | 'shears_special';
 
 const ICONS: IconName[] = ['ant', 'blue_flower', 'grass', 'potted_plant', 'red_flower', 'shovel'];
@@ -618,7 +622,7 @@ function renderGrid(newCells?: Set<string>): void {
 
       const img = document.createElement('img');
       if (isSpecial) {
-        img.src = `assets/tile icons/special_tiles/${icon === 'bomb_special' ? 'bomb icon.jpg' : 'shears icon.png'}`;
+        img.src = `assets/tile icons/special_tiles/${icon === 'bomb_special' ? 'bomb icon.png' : 'shears icon.png'}`;
       } else {
         img.src = `assets/tile icons/${cellSet}/${icon}.png`;
       }
@@ -644,12 +648,12 @@ function updateCellDOM(row: number, col: number): void {
   const cellSet = isGold ? 'Tile_icons_gold' : gameIconSet;
   const img = cell.querySelector('img') as HTMLImageElement;
   if (isSpecial) {
-    img.src = `assets/tile icons/special_tiles/${icon === 'bomb_special' ? 'bomb icon.jpg' : 'shears icon.png'}`;
+    img.src = `assets/tile icons/special_tiles/${icon === 'bomb_special' ? 'bomb icon.png' : 'shears icon.png'}`;
   } else {
     img.src = `assets/tile icons/${cellSet}/${icon}.png`;
   }
-  img.alt = icon;
-  cell.dataset.icon = icon;
+  img.alt = icon ?? '';
+  cell.dataset.icon = icon ?? '';
   if (isGold) cell.dataset.gold = 'true'; else delete cell.dataset.gold;
   if (isSpecial) cell.classList.add('special-tile'); else cell.classList.remove('special-tile');
 }
@@ -1707,7 +1711,6 @@ function showWinScreen(): void {
   localStorage.setItem('candyCoins', String(currentCoins + totalCoinsEarned));
 
   // Quest progress
-  const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
   updateQuestProgress('win1', 1);
   updateQuestProgress('win5', 1);
   updateQuestProgress('win10', 1);
