@@ -875,13 +875,17 @@ function showWinScreen() {
   const currentCoins = parseInt(localStorage.getItem('candyCoins') || '0');
 
   const coinsEarned = Math.floor(points / 10);
-  localStorage.setItem('candyLevel', String(currentLevel + 1));
-  localStorage.setItem('candyWinTarget', String(currentTarget + 50));
-  localStorage.setItem('candyCoins', String(currentCoins + coinsEarned));
 
   const levelWinsKey = `levelWins_${currentLevel}`;
   const currentLevelWins = parseInt(localStorage.getItem(levelWinsKey) || '0');
-  localStorage.setItem(levelWinsKey, String(currentLevelWins + 1));
+  const newWins = currentLevelWins + 1;
+  localStorage.setItem(levelWinsKey, String(newWins));
+
+  if (newWins >= 3) {
+    localStorage.setItem('candyLevel', String(currentLevel + 1));
+  }
+  localStorage.setItem('candyWinTarget', String(currentTarget + 50));
+  localStorage.setItem('candyCoins', String(currentCoins + coinsEarned));
 
   const screen = document.getElementById('win-screen');
   const scoreEl = document.getElementById('win-score');
@@ -969,7 +973,10 @@ function startGame() {
   winTarget = (basePoints[diff] || basePoints.medium) + (currentLevel - 1) * 250;
 
   savedBackground = applyRandomBackground();
-  savedMoveCap = Math.floor(Math.random() * 16) + 18;
+  const baseMovesPerDiff = { easy: 22, medium: 20, hard: 18 };
+  const baseMoves = baseMovesPerDiff[diff] || baseMovesPerDiff.medium;
+  const levelBonus = Math.max(0, (currentLevel - 1) * 2);
+  savedMoveCap = baseMoves + levelBonus + Math.floor(Math.random() * 6) - 3;
   moveCap = savedMoveCap;
   movesUsed = 0;
   timeLeft = diff === 'easy' ? 120 : diff === 'hard' ? 60 : 90;
