@@ -99,7 +99,7 @@ function showBombBurst(cx: number, cy: number): void {
   const END_SIZE = 650;
   const START_SIZE = 40;
   const img = document.createElement('img');
-  img.src = 'assets/animations/tile icons animations/bombanimation.jpg';
+  img.src = 'assets/animations/tile icons animations/bombanimation.png';
   img.style.cssText = `position:fixed;pointer-events:none;z-index:150;left:${cx}px;top:${cy}px;transform:translate(-50%,-50%);width:${START_SIZE}px;height:${START_SIZE}px;opacity:0;`;
   document.body.appendChild(img);
   const start = performance.now();
@@ -1055,7 +1055,7 @@ async function processMatches(depth = 0): Promise<void> {
     showBreakAnimation(r, c);
   });
 
-  await sleep(300);
+  await sleep(215);
 
   // Apply gravity and refill — only within active cells per column
   const newCells = new Set<string>();
