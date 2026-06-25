@@ -408,8 +408,9 @@
 
         return `
           <div class="bg-card ${lockedClass}${isSelected ? ' bg-selected' : ''}">
-            <div class="bg-preview" style="background-image: url('${bg.path}')"></div>
-            ${isLocked ? `<div class="lock-icon">🔒</div>` : ''}
+            <div class="bg-preview" style="background-image: url('${bg.path}')">
+              ${isLocked ? `<div class="lock-icon">🔒</div>` : ''}
+            </div>
             <div class="bg-info" data-level="${bg.unlockLevel}">
               <div>${bg.name}</div>
               ${!isOwned && !isLocked ? `<div class="bg-price">💰 ${bg.price}</div>` : ''}

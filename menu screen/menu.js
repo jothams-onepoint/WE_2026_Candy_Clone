@@ -75,6 +75,8 @@ function updateLevelPopup() {
   const levelWinsKey = `levelWins_${currentLevel}`;
   const currentLevelWins = parseInt(localStorage.getItem(levelWinsKey) || '0');
   const winsPerLevel = getWinsNeeded(currentLevel);
+  const nextLevel = currentLevel + 1;
+  const isMilestone = nextLevel % 5 === 0;
 
   document.getElementById('level-popup-number').textContent = String(currentLevel);
   document.getElementById('level-popup-wins').textContent = String(currentLevelWins);
@@ -84,6 +86,16 @@ function updateLevelPopup() {
   const progressBar = document.getElementById('level-popup-progress');
   if (progressBar) {
     progressBar.style.width = progressPercent + '%';
+  }
+
+  const rewardEl = document.getElementById('level-popup-rewards');
+  if (rewardEl) {
+    let rewardText = `<strong>Level ${nextLevel} Rewards:</strong><br>`;
+    rewardText += `💰 Coin multiplier: ${nextLevel >= 20 ? '3x' : (nextLevel >= 10 ? '2x' : '1x')}<br>`;
+    if (isMilestone) {
+      rewardText += `🎉 <span style="color:#7af0b0;">MILESTONE BONUS: Double coins!</span>`;
+    }
+    rewardEl.innerHTML = rewardText;
   }
 }
 

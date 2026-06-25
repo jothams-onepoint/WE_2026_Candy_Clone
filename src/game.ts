@@ -327,9 +327,9 @@ function updateStopwatch(): void {
   const secs = timeLeft % 60;
   timeText.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
 
-  // Calculate rotation angles (SVG starts at 12 o'clock, rotates clockwise)
+  const maxTimeLeft = savedMoveCap > 0 ? (savedMoveCap > 20 ? 120 : (savedMoveCap > 17 ? 90 : 60)) : 60;
   const secondAngle = (secs / 60) * 360;
-  const minuteAngle = ((mins % 60) / 60) * 360 + (secs / 60) * (360 / 60);
+  const minuteAngle = (timeLeft / maxTimeLeft) * 360;
 
   minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
   secondHand.style.transform = `rotate(${secondAngle}deg)`;
@@ -1023,24 +1023,50 @@ function getScaledCoins(baseCoin: number, level: number): number {
 }
 
 function showCountdown(): void {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes countdownPulse {
+      0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 10px rgba(122,240,176,0.6)); }
+      50% { transform: scale(1.15); opacity: 0.8; filter: drop-shadow(0 0 30px rgba(122,240,176,1)); }
+      100% { transform: scale(0.95); opacity: 0.6; filter: drop-shadow(0 0 20px rgba(122,240,176,0.8)); }
+    }
+    @keyframes countdownGO {
+      0% { transform: scale(0.5); opacity: 0; filter: drop-shadow(0 0 0px rgba(122,240,176,0)); }
+      50% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 40px rgba(122,240,176,1)); }
+      100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 20px rgba(122,240,176,0.8)); }
+    }
+  `;
+  document.head.appendChild(style);
+
   const countdownEl = document.createElement('div');
   countdownEl.id = 'countdown-overlay';
-  countdownEl.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:5000;font-size:clamp(60px,15vmin,120px);font-weight:900;color:#7af0b0;text-shadow:0 0 20px rgba(122,240,176,0.8);font-family:Fredoka,sans-serif;';
+  countdownEl.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:5000;backdrop-filter:blur(2px);font-family:Fredoka,sans-serif;';
+
+  const text = document.createElement('div');
+  text.style.cssText = 'font-size:clamp(80px,20vmin,180px);font-weight:900;color:#7af0b0;text-shadow:-2px -2px 0 #4a9d52, 2px -2px 0 #4a9d52, -2px 2px 0 #4a9d52, 2px 2px 0 #4a9d52, 0 0 40px rgba(122,240,176,0.8);animation:countdownPulse 0.8s ease-in-out forwards;letter-spacing:4px;';
+
+  countdownEl.appendChild(text);
   document.body.appendChild(countdownEl);
 
   let count = 3;
   const countLoop = setInterval(() => {
-    countdownEl.textContent = String(count);
+    text.textContent = String(count);
+    text.style.animation = 'none';
+    setTimeout(() => {
+      text.style.animation = 'countdownPulse 0.8s ease-in-out forwards';
+    }, 10);
     count--;
     if (count < 0) {
       clearInterval(countLoop);
-      countdownEl.textContent = 'GO!';
+      text.textContent = 'GO!';
+      text.style.animation = 'countdownGO 0.6s ease-out forwards';
       setTimeout(() => {
         countdownEl.remove();
+        style.remove();
         startTimer();
-      }, 400);
+      }, 600);
     }
-  }, 600);
+  }, 800);
 }
 
 function resetGame(): void {
