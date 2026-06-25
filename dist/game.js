@@ -34,6 +34,27 @@ let savedBgIndex = 0;
 let gridShape = null;
 let savedGridShape = null;
 
+function updateQuestProgress(questId, value, mode = 'increment') {
+  const dailyQuests = JSON.parse(localStorage.getItem('dailyQuests') || '[]');
+  if (!dailyQuests.includes(questId)) return;
+  const progress = JSON.parse(localStorage.getItem('questProgress') || '{}');
+  if (mode === 'max') {
+    progress[questId] = Math.max(progress[questId] || 0, value);
+  } else {
+    progress[questId] = (progress[questId] || 0) + value;
+  }
+  localStorage.setItem('questProgress', JSON.stringify(progress));
+}
+
+function recalcCellSize() {
+  const n = GRID_SIZE || 8;
+  // Reserve ~180px each side for stopwatch (right) and booster bar (left), plus 220px vertically for HUD
+  const availW = Math.max(window.innerWidth - 360, n * 48);
+  const availH = Math.max(window.innerHeight - 220, n * 48);
+  const cell = Math.max(48, Math.min(88, Math.floor(Math.min(availW / n, availH / n))));
+  document.documentElement.style.setProperty('--cell', `${cell}px`);
+}
+
 let bombModeActive = false;
 let bombCursorMoveHandler = null;
 let lightningModeActive = false;
@@ -120,6 +141,7 @@ async function fireBomb(centerRow, centerCol) {
   if (!inv['bomb'] || inv['bomb'] <= 0) { cancelBombMode(); return; }
   inv['bomb']--;
   localStorage.setItem('candyInventory', JSON.stringify(inv));
+  updateQuestProgress('booster3', 1);
   cancelBombMode();
   isAnimating = true;
 
@@ -348,6 +370,7 @@ async function fireLightning(row, col) {
   if (!inv['lightning'] || inv['lightning'] <= 0) { cancelLightningMode(); return; }
   inv['lightning']--;
   localStorage.setItem('candyInventory', JSON.stringify(inv));
+  updateQuestProgress('booster3', 1);
   cancelLightningMode();
   isAnimating = true;
 
@@ -415,6 +438,7 @@ function activateBooster(id) {
   if (id === 'lightning') { enterLightningMode(); return; }
   inv[id]--;
   localStorage.setItem('candyInventory', JSON.stringify(inv));
+  updateQuestProgress('booster3', 1);
   switch (id) {
     case 'color-blast': moveCap += 5; updateMovesDisplay(); break;
   }
@@ -566,7 +590,7 @@ function generateGoldGrid() {
 function renderGrid(newCells) {
   const container = document.getElementById('game-grid');
   if (!container) return;
-  container.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 68px)`;
+  container.style.gridTemplateColumns = `repeat(${GRID_SIZE}, var(--cell))`;
   container.innerHTML = '';
   for (let row = 0; row < GRID_SIZE; row++) {
     for (let col = 0; col < GRID_SIZE; col++) {
@@ -1523,9 +1547,7 @@ function showLevelUpFlourish(oldLevel, newLevel) {
 
   if (!levelDisplay) return;
 
-  const rect = levelDisplay.getBoundingClientRect();
-  const targetX = rect.left + rect.width / 2;
-  const targetY = rect.top + rect.height / 2;
+  // Snapshot center NOW for old-level and particles (screen-center based, always safe)
   const centerX = window.innerWidth / 2;
   const centerY = window.innerHeight / 2;
 
@@ -1552,11 +1574,18 @@ function showLevelUpFlourish(oldLevel, newLevel) {
   }
 
   setTimeout(() => {
+    // Re-measure at animation time so window resize/maximize is accounted for
+    const liveRect = levelDisplay.getBoundingClientRect();
+    const liveTargetX = liveRect.left + liveRect.width / 2;
+    const liveTargetY = liveRect.top + liveRect.height / 2;
+    const liveCenterX = window.innerWidth / 2;
+    const liveCenterY = window.innerHeight / 2;
+
     const newLevelEl = document.createElement('div');
     newLevelEl.className = 'flourish-new-level';
     newLevelEl.textContent = String(newLevel);
-    newLevelEl.style.setProperty('--glide-x', (targetX - centerX) + 'px');
-    newLevelEl.style.setProperty('--glide-y', (targetY - centerY) + 'px');
+    newLevelEl.style.setProperty('--glide-x', (liveTargetX - liveCenterX) + 'px');
+    newLevelEl.style.setProperty('--glide-y', (liveTargetY - liveCenterY) + 'px');
     document.body.appendChild(newLevelEl);
 
     if (progressBar) {
@@ -1577,41 +1606,47 @@ function celebrateWin(leveledUp) {
   const style = document.createElement('style');
   style.textContent = `
     @keyframes celebrationPop {
-      0% { transform: translate(0, 0) scale(1); opacity: 1; }
-      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+      0%   { transform: translate(0,0) scale(1.2) rotate(0deg); opacity: 1; }
+      100% { transform: translate(var(--tx),var(--ty)) scale(0) rotate(var(--rot)); opacity: 0; }
     }
     .celebration-particle {
       position: fixed;
       pointer-events: none;
-      font-size: 24px;
-      animation: celebrationPop 1.2s ease-out forwards;
+      animation: celebrationPop var(--dur) cubic-bezier(0.1,0.85,0.25,1) var(--delay) forwards;
       z-index: 4999;
+      transform-origin: center;
     }
   `;
   document.head.appendChild(style);
 
-  const emojis = ['🎉', '✨', '⭐', '🌟', '💫', '🎊', '💥', '🎁'];
+  const emojis = ['🎉', '✨', '⭐', '🌟', '💫', '🎊', '🏆', '🍬', '🍭', '💥', '🎁', '🌈'];
   const centerX = window.innerWidth / 2;
   const centerY = window.innerHeight / 2;
-  const particleCount = 40;
+  const particleCount = 70;
 
   for (let i = 0; i < particleCount; i++) {
-    const angle = (i / particleCount) * Math.PI * 2;
-    const distance = 300 + Math.random() * 200;
+    const angle = (i / particleCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.4;
+    const distance = 180 + Math.random() * 320;
     const tx = Math.cos(angle) * distance;
     const ty = Math.sin(angle) * distance;
     const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+    const size = 20 + Math.random() * 18;
+    const dur = 1.0 + Math.random() * 0.7;
+    const delay = Math.random() * 0.3;
+    const rot = (Math.random() - 0.5) * 720;
 
     const particle = document.createElement('div');
     particle.className = 'celebration-particle';
     particle.textContent = emoji;
-    particle.style.left = centerX + 'px';
-    particle.style.top = centerY + 'px';
+    particle.style.cssText = `left:${centerX}px;top:${centerY}px;font-size:${size}px;`;
     particle.style.setProperty('--tx', tx + 'px');
     particle.style.setProperty('--ty', ty + 'px');
+    particle.style.setProperty('--dur', dur + 's');
+    particle.style.setProperty('--delay', delay + 's');
+    particle.style.setProperty('--rot', rot + 'deg');
     document.body.appendChild(particle);
 
-    setTimeout(() => particle.remove(), 1200);
+    setTimeout(() => particle.remove(), (dur + delay) * 1000 + 100);
   }
 
   if (localStorage.getItem('soundEnabled') !== 'false') {
@@ -1629,6 +1664,15 @@ function celebrateWin(leveledUp) {
   }
 }
 
+const BG_COIN_MULTIPLIERS = {
+  'bg_lush_meadow':      1.0,
+  'bg_autumn_garden':    1.2,
+  'bg_morning_dew':      1.5,
+  'bg_shaded_grove':     1.8,
+  'bg_sunlit_garden':    2.2,
+  'bg_wildflower_patch': 2.5,
+};
+
 function showWinScreen() {
   stopTimer();
   const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
@@ -1643,8 +1687,11 @@ function showWinScreen() {
   const currentTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');
   const currentCoins = parseInt(localStorage.getItem('candyCoins') || '0');
 
+  const selectedBg = localStorage.getItem('candySelectedBg') || 'bg_lush_meadow';
+  const bgMultiplier = BG_COIN_MULTIPLIERS[selectedBg] || 1.0;
+
   const baseCoinReward = [0, 75, 150, 300][Math.floor(currentLevel / 5)] || 300;
-  const coinsEarned = getScaledCoins(baseCoinReward, currentLevel);
+  const coinsEarned = Math.round(getScaledCoins(baseCoinReward, currentLevel) * bgMultiplier);
 
   const levelWinsKey = `levelWins_${currentLevel}`;
   const currentLevelWins = parseInt(localStorage.getItem(levelWinsKey) || '0');
@@ -1668,6 +1715,17 @@ function showWinScreen() {
   const totalCoinsEarned = coinsEarned + bonusCoins;
   localStorage.setItem('candyWinTarget', String(currentTarget + 50));
   localStorage.setItem('candyCoins', String(currentCoins + totalCoinsEarned));
+
+  // Quest progress
+  const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
+  updateQuestProgress('win1', 1);
+  updateQuestProgress('win5', 1);
+  updateQuestProgress('win10', 1);
+  if (diff === 'medium') updateQuestProgress('medium1', 1);
+  if (diff === 'hard') updateQuestProgress('hard5', 1);
+  updateQuestProgress('points200', points, 'max');
+  updateQuestProgress('points1000', points, 'max');
+  updateQuestProgress('points2500', points, 'max');
 
   if (leveledUp) {
     localStorage.setItem('pendingLevelUp', JSON.stringify({
@@ -1782,6 +1840,7 @@ function startGame() {
   savedIconSet = gameIconSet;
   gridShape = generateGridShape(currentLevel);
   savedGridShape = gridShape;
+  recalcCellSize();
   gameGrid = generateGrid();
   savedGrid = gameGrid.map(row => [...row]);
   goldGrid = generateGoldGrid();
@@ -1948,6 +2007,7 @@ function resetGame() {
   gameIconSet = savedIconSet;
   gridShape = savedGridShape;
   GRID_SIZE = gridShape ? 7 : 8;
+  recalcCellSize();
   gameGrid = savedGrid.map(row => [...row]);
   goldGrid = savedGoldGrid.map(row => [...row]);
   renderGrid();
@@ -2096,6 +2156,10 @@ function setupDragHandlers() {
     handleDragEnd(touch.clientX, touch.clientY);
   });
 }
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('game-grid')?.children.length) recalcCellSize();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize animated background

@@ -265,6 +265,125 @@
     }
     .bg-card button:hover:not(:disabled) { background: linear-gradient(135deg, #3d8a4e, #2e6a3c); }
     .bg-card button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Background Preview Modal ── */
+    #bg-preview-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 9000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    #bg-preview-modal.active { display: flex; }
+
+    .bg-preview-content {
+      background: linear-gradient(145deg, #1a1a1a 0%, #2d2d2d 100%);
+      border: 3px solid #7a3aad;
+      border-radius: 16px;
+      padding: clamp(16px, 4vmin, 32px);
+      max-width: min(90vw, 600px);
+      max-height: 90vh;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(16px, 3vmin, 24px);
+      box-shadow: 0 0 60px rgba(122, 58, 173, 0.4);
+    }
+
+    .bg-preview-image-container {
+      width: 100%;
+      aspect-ratio: 16/10;
+      border-radius: 12px;
+      border: 2px solid rgba(122, 58, 173, 0.3);
+      overflow: hidden;
+      background: #f0f0f0;
+    }
+
+    #preview-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .bg-preview-title {
+      font-size: clamp(20px, 5vmin, 32px);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+
+    .bg-preview-buff {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(240,192,64,0.18) 0%, rgba(240,192,64,0.08) 100%);
+      border: 1.5px solid rgba(240,192,64,0.5);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: clamp(13px, 2vmin, 15px);
+      font-weight: 700;
+      color: #f0c040;
+      letter-spacing: 0.04em;
+    }
+
+    .bg-preview-desc {
+      font-size: clamp(13px, 2.2vmin, 16px);
+      color: #ddd;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+
+    .bg-mult-badge {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      background: linear-gradient(135deg, #f0c040 0%, #d4a020 100%);
+      color: #1a0f00;
+      border-radius: 10px;
+      padding: 3px 8px;
+      font-size: clamp(9px, 1.5vmin, 11px);
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .bg-preview-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .bg-preview-buttons button {
+      flex: 1;
+      padding: clamp(10px, 1.8vmin, 15px);
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: clamp(12px, 2vmin, 15px);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    #bg-preview-action {
+      background: linear-gradient(135deg, #2d7a3e 0%, #1e5a2c 100%);
+      color: #fff;
+    }
+    #bg-preview-action:hover:not(:disabled) { background: linear-gradient(135deg, #3d8a4e, #2e6a3c); transform: scale(1.02); }
+    #bg-preview-action:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    #bg-preview-close {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.3);
+    }
+    #bg-preview-close:hover { background: rgba(255,255,255,0.25); }
   </style>
 </head>
 <body>
@@ -288,7 +407,23 @@
         <div class="backgrounds-grid" id="backgrounds-grid"></div>
       </div>
     </div>
+
+    <div id="bg-preview-modal">
+      <div class="bg-preview-content">
+        <div class="bg-preview-image-container">
+          <img id="preview-image" src="" alt="">
+        </div>
+        <div class="bg-preview-title" id="preview-title"></div>
+        <div class="bg-preview-buff" id="preview-buff"></div>
+        <div class="bg-preview-desc" id="preview-desc"></div>
+        <div class="bg-preview-buttons">
+          <button id="bg-preview-action">BUY</button>
+          <button id="bg-preview-close">CLOSE</button>
+        </div>
+      </div>
+    </div>
   </div>
+  <script src="../assets/animations/backgrounds.js"></script>
 
   <script>
     const clickSound = new Audio('../assets/Sounds/pop.mp3');
@@ -313,15 +448,29 @@
     ];
 
     const BG_DATA = [
-      { name: 'Autumn Garden',    id: 'bg_autumn_garden',    path: '../assets/backgrounds/bg_autumn_garden.png',    unlockLevel: 1,  price: 100 },
-      { name: 'Lush Meadow',      id: 'bg_lush_meadow',      path: '../assets/backgrounds/bg_lush_meadow.png',      unlockLevel: 1,  price: 100 },
-      { name: 'Morning Dew',      id: 'bg_morning_dew',      path: '../assets/backgrounds/bg_morning_dew.png',      unlockLevel: 3,  price: 200 },
-      { name: 'Shaded Grove',     id: 'bg_shaded_grove',     path: '../assets/backgrounds/bg_shaded_grove.png',     unlockLevel: 5,  price: 250 },
-      { name: 'Sunlit Garden',    id: 'bg_sunlit_garden',    path: '../assets/backgrounds/bg_sunlit_garden.png',    unlockLevel: 8,  price: 300 },
-      { name: 'Wildflower Patch', id: 'bg_wildflower_patch', path: '../assets/backgrounds/bg_wildflower_patch.png', unlockLevel: 10, price: 350 },
+      { name: 'Lush Meadow',      id: 'bg_lush_meadow',      path: '../assets/backgrounds/bg_lush_meadow.png',      unlockLevel: 1,  price: 0,    coinMult: 1.0, desc: 'The ultimate starter backdrop — vibrant green grass and wildflowers under blue skies. Simple, serene, and timeless.' },
+      { name: 'Autumn Garden',    id: 'bg_autumn_garden',    path: '../assets/backgrounds/bg_autumn_garden.png',    unlockLevel: 1,  price: 200,  coinMult: 1.2, desc: 'A cozy garden painted in warm autumn hues. Golden leaves drift through a peaceful meadow beneath a harvest moon.' },
+      { name: 'Morning Dew',      id: 'bg_morning_dew',      path: '../assets/backgrounds/bg_morning_dew.png',      unlockLevel: 3,  price: 450,  coinMult: 1.5, desc: 'Misty meadows kissed by the first light of dawn. Dewdrops sparkle on grass while nature awakens peacefully.' },
+      { name: 'Shaded Grove',     id: 'bg_shaded_grove',     path: '../assets/backgrounds/bg_shaded_grove.png',     unlockLevel: 5,  price: 800,  coinMult: 1.8, desc: 'A cool forest sanctuary where ancient trees form a protective canopy. Dappled sunlight filters through leafy branches.' },
+      { name: 'Sunlit Garden',    id: 'bg_sunlit_garden',    path: '../assets/backgrounds/bg_sunlit_garden.png',    unlockLevel: 8,  price: 1400, coinMult: 2.2, desc: 'A radiant garden bursting with color, where sunlight dances across blooming flowers and lush green foliage.' },
+      { name: 'Wildflower Patch', id: 'bg_wildflower_patch', path: '../assets/backgrounds/bg_wildflower_patch.png', unlockLevel: 10, price: 2000, coinMult: 2.5, desc: 'A breathtaking sea of wildflowers in every color imaginable. Nature\'s canvas unfolds in this magnificent botanical wonder.' },
     ];
 
     let coins = 0, inventory = {}, unlockedBgs = new Set(), currentLevel = 1;
+    let bgThumbCache = {};
+
+    function generateBgThumbnail(bgIndex) {
+      if (bgThumbCache[bgIndex]) return bgThumbCache[bgIndex];
+      const canvas = document.createElement('canvas');
+      canvas.width = 240;
+      canvas.height = 180;
+      if (window.BgSystem && window.BgSystem.draw) {
+        window.BgSystem.draw(canvas, bgIndex);
+        bgThumbCache[bgIndex] = canvas.toDataURL();
+        return bgThumbCache[bgIndex];
+      }
+      return '';
+    }
 
     function loadGameData() {
       coins        = parseInt(localStorage.getItem('candyCoins')   || '0');
@@ -360,14 +509,64 @@
       renderShop();
     }
 
+    const BG_PREVIEW_PATHS = {
+      'bg_lush_meadow':      '../assets/backgrounds/bg_lush_meadowanim.png',
+      'bg_autumn_garden':    '../assets/backgrounds/bg_autumn_gardenanim.png',
+      'bg_morning_dew':      '../assets/backgrounds/bg_morning_dewanim.png',
+      'bg_shaded_grove':     '../assets/backgrounds/bg_shaded_groveanim.png',
+      'bg_sunlit_garden':    '../assets/backgrounds/bg_sunlit_gardenanim.png',
+      'bg_wildflower_patch': '../assets/backgrounds/bg_wildflower_patchanim.png',
+    };
+
+    function loadBgPreview(bgId) {
+      const img = document.getElementById('preview-image');
+      const previewPath = BG_PREVIEW_PATHS[bgId];
+      if (previewPath) {
+        img.src = previewPath;
+      }
+    }
+
+    function openBgPreview(bgId) {
+      const bg = BG_DATA.find(x => x.id === bgId);
+      if (!bg) return;
+      const isLocked = currentLevel < bg.unlockLevel;
+      const isOwned = unlockedBgs.has(bgId);
+
+      loadBgPreview(bgId);
+
+      document.getElementById('preview-title').textContent = bg.name;
+      document.getElementById('preview-buff').innerHTML =
+        `💰 ${bg.coinMult}× coin multiplier${bg.coinMult === 1.0 ? ' <span style="opacity:0.6;font-weight:400">(base)</span>' : ''}`;
+      document.getElementById('preview-desc').textContent = bg.desc;
+
+      const actionBtn = document.getElementById('bg-preview-action');
+      if (isLocked) {
+        actionBtn.textContent = `UNLOCK AT LEVEL ${bg.unlockLevel}`;
+        actionBtn.disabled = true;
+      } else if (!isOwned) {
+        actionBtn.textContent = bg.price === 0 ? 'GET FOR FREE' : `BUY • 💰 ${bg.price}`;
+        actionBtn.disabled = false;
+        actionBtn.onclick = () => { closeBgPreview(); buyBackground(bgId); };
+      } else {
+        actionBtn.textContent = '✓ OWNED';
+        actionBtn.disabled = true;
+      }
+
+      document.getElementById('bg-preview-modal').classList.add('active');
+    }
+
+    function closeBgPreview() {
+      document.getElementById('bg-preview-modal').classList.remove('active');
+    }
+
     function buyBackground(bgId) {
       const bg = BG_DATA.find(x => x.id === bgId);
       if (!bg) return;
       if (currentLevel < bg.unlockLevel) { alert(`Unlock at Level ${bg.unlockLevel}`); return; }
-      if (unlockedBgs.has(bgId))         { alert('Already owned!'); return; }
-      if (coins < bg.price)              { alert('Not enough coins!'); return; }
+      if (unlockedBgs.has(bgId))         { return; }
+      if (bg.price > 0 && coins < bg.price) { alert('Not enough coins!'); return; }
       playClick();
-      coins -= bg.price;
+      if (bg.price > 0) coins -= bg.price;
       unlockedBgs.add(bgId);
       saveGameData();
       renderShop();
@@ -397,7 +596,7 @@
         if (isLocked) {
           btnLabel = 'LOCKED'; btnOnclick = ''; btnDisabled = 'disabled'; btnStyle = '';
         } else if (!isOwned) {
-          btnLabel = 'BUY'; btnOnclick = `buyBackground('${bg.id}')`; btnDisabled = ''; btnStyle = '';
+          btnLabel = bg.price === 0 ? 'FREE' : 'BUY'; btnOnclick = `buyBackground('${bg.id}')`; btnDisabled = ''; btnStyle = '';
         } else if (isSelected) {
           btnLabel = '✓ SELECTED'; btnOnclick = ''; btnDisabled = 'disabled';
           btnStyle = 'background:linear-gradient(135deg,#7a3aad 0%,#5a1a8a 100%);color:#fff;';
@@ -406,22 +605,30 @@
           btnStyle = 'background:linear-gradient(135deg,#1e7a4e 0%,#145a38 100%);';
         }
 
+        const bgIndex = ['bg_autumn_garden', 'bg_lush_meadow', 'bg_morning_dew', 'bg_shaded_grove', 'bg_sunlit_garden', 'bg_wildflower_patch'].indexOf(bg.id);
+        const thumbUrl = generateBgThumbnail(bgIndex) || bg.path;
         return `
-          <div class="bg-card ${lockedClass}${isSelected ? ' bg-selected' : ''}">
-            <div class="bg-preview" style="background-image: url('${bg.path}')">
+          <div class="bg-card ${lockedClass}${isSelected ? ' bg-selected' : ''}" style="cursor:pointer;user-select:none;" onclick="openBgPreview('${bg.id}')">
+            <div class="bg-preview" style="background-image: url('${thumbUrl}'); position:relative;">
               ${isLocked ? `<div class="lock-icon">🔒</div>` : ''}
+              <div class="bg-mult-badge">💰 ${bg.coinMult}×</div>
             </div>
             <div class="bg-info" data-level="${bg.unlockLevel}">
               <div>${bg.name}</div>
               ${!isOwned && !isLocked ? `<div class="bg-price">💰 ${bg.price}</div>` : ''}
               ${isOwned && !isSelected ? `<div style="color:#2d7a3e;font-weight:900;">✓ OWNED</div>` : ''}
             </div>
-            <button onclick="${btnOnclick}" ${btnDisabled} style="${btnStyle}">${btnLabel}</button>
+            <button onclick="event.stopPropagation();${btnOnclick}" ${btnDisabled} style="${btnStyle}">${btnLabel}</button>
           </div>
         `;
       }).join('');
       document.getElementById('backgrounds-grid').innerHTML = bgHtml;
     }
+
+    document.getElementById('bg-preview-close').addEventListener('click', closeBgPreview);
+    document.getElementById('bg-preview-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'bg-preview-modal') closeBgPreview();
+    });
 
     loadGameData();
     renderShop();
