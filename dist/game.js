@@ -894,16 +894,18 @@ function showWinScreen() {
 
 function applyRandomBackground() {
   const selectedId = localStorage.getItem('candySelectedBg');
+  const bgMap = {
+    'bg_lush_meadow': 0,
+    'bg_autumn_garden': 1,
+    'bg_morning_dew': 2,
+    'bg_shaded_grove': 3,
+    'bg_sunlit_garden': 4,
+    'bg_wildflower_patch': 5
+  };
   let bgIdx = 0;
 
-  if (selectedId && window.BgSystem) {
-    for (let i = 0; i < window.BgSystem.count(); i++) {
-      const info = window.BgSystem.info(i);
-      if (info && info.id && info.id.includes(selectedId)) {
-        bgIdx = i;
-        break;
-      }
-    }
+  if (selectedId) {
+    bgIdx = bgMap[selectedId] !== undefined ? bgMap[selectedId] : Math.floor(Math.random() * (window.BgSystem ? window.BgSystem.count() : BACKGROUNDS.length));
   } else {
     bgIdx = Math.floor(Math.random() * (window.BgSystem ? window.BgSystem.count() : BACKGROUNDS.length));
   }
@@ -1126,6 +1128,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('objective-start-btn')?.addEventListener('click', () => {
     document.getElementById('objective-screen')?.classList.add('hidden');
+    document.getElementById('app')?.classList.remove('hidden');
   });
 
   document.getElementById('retry-btn')?.addEventListener('click', resetGame);

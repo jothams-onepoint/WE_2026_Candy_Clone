@@ -176,7 +176,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize animated background
   if (window.BgSystem) {
     window.BgSystem.init();
-    window.BgSystem.start(0); // lush meadow
+    const selectedBgId = localStorage.getItem('candySelectedBg');
+    const bgMap = {
+      'bg_lush_meadow': 0,
+      'bg_autumn_garden': 1,
+      'bg_morning_dew': 2,
+      'bg_shaded_grove': 3,
+      'bg_sunlit_garden': 4,
+      'bg_wildflower_patch': 5
+    };
+    const bgIdx = selectedBgId && bgMap[selectedBgId] !== undefined ? bgMap[selectedBgId] : 0;
+    window.BgSystem.start(bgIdx);
   }
 
   // Upper zone: fast insects, doves, feathers, floating leaves

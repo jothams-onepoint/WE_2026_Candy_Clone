@@ -162,36 +162,6 @@ html, body {
   margin-right: auto;
 }
 
-#level-display {
-  position: relative;
-  left: 0;
-  text-align: center;
-  margin-top: clamp(6px, 1vmin, 10px);
-  margin-left: auto;
-  margin-right: auto;
-  font-size: clamp(18px, 4.5vw, 32px);
-  font-weight: 700;
-  color: #fff;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 210, 60, 0.7);
-  letter-spacing: 2px;
-  user-select: none;
-  cursor: pointer;
-  pointer-events: auto;
-  transition: transform 0.08s ease, filter 0.08s ease;
-  padding: clamp(3px, 0.5vmin, 4px) clamp(8px, 1.5vmin, 12px);
-  border-radius: 8px;
-  white-space: nowrap;
-}
-
-#level-display:hover {
-  transform: translateY(-2px);
-  filter: drop-shadow(0 4px 8px rgba(255, 210, 60, 0.4));
-}
-
-#level-display:active {
-  transform: translateY(0);
-}
-
 /* ── Level Info Display (top-left) ── */
 #level-info-display {
   position: fixed;
@@ -219,11 +189,12 @@ html, body {
 }
 
 #level-number-display {
-  font-family: 'Courier New', monospace;
-  font-size: clamp(24px, 5vmin, 40px);
-  font-weight: 900;
-  color: #7af0b0;
-  text-shadow: 0 0 12px rgba(122, 240, 176, 0.5);
+  font-family: 'Fredoka', 'Comic Sans MS', sans-serif;
+  font-size: clamp(24px, 5.5vw, 40px);
+  font-weight: 700;
+  color: #ffd23c;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 210, 60, 0.7);
+  letter-spacing: 2px;
   line-height: 1;
 }
 
