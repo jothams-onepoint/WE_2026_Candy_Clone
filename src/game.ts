@@ -28,6 +28,7 @@ let savedGrid: IconName[][] = [];
 let savedGoldGrid: boolean[][] = [];
 let savedIconSet: IconSet = 'tile_icons_red';
 let savedMoveCap = 0;
+let savedMaxTime = 120;
 let savedBackground = '';
 let savedBgIndex = 0;
 
@@ -318,21 +319,58 @@ function updateTimerDisplay(): void {
 }
 
 function updateStopwatch(): void {
-  const minuteHand = document.getElementById('minute-hand');
-  const secondHand = document.getElementById('second-hand');
+  const canvas = document.getElementById('stopwatch-canvas') as HTMLCanvasElement | null;
   const timeText = document.getElementById('time-text');
-  if (!minuteHand || !secondHand || !timeText) return;
+  if (!canvas || !timeText) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
 
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
   timeText.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
 
-  const maxTimeLeft = savedMoveCap > 0 ? (savedMoveCap > 20 ? 120 : (savedMoveCap > 17 ? 90 : 60)) : 60;
-  const secondAngle = (secs / 60) * 360;
-  const minuteAngle = (timeLeft / maxTimeLeft) * 360;
+  const W = canvas.width;
+  const cx = W / 2, cy = W / 2;
+  const radius = W * 0.38;
+  const lw = W * 0.085;
+  const fraction = Math.max(0, Math.min(1, timeLeft / savedMaxTime));
 
-  minuteHand.style.transform = `rotate(${minuteAngle}deg)`;
-  secondHand.style.transform = `rotate(${secondAngle}deg)`;
+  ctx.clearRect(0, 0, W, W);
+
+  // Track ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = lw;
+  ctx.stroke();
+
+  if (fraction > 0) {
+    const color = fraction > 0.5 ? '#7af0b0' : fraction > 0.25 ? '#f0c040' : '#ff5555';
+    const startA = -Math.PI / 2;
+    const endA = startA + fraction * Math.PI * 2;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, startA, endA);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 16;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, endA - 0.001, endA);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lw;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, W * 0.045, 0, Math.PI * 2);
+  ctx.fillStyle = '#f0c040';
+  ctx.fill();
 }
 
 function show10SecondWarning(): void {
@@ -862,6 +900,177 @@ function handleDragEnd(endX: number, endY: number): void {
   }
 }
 
+function showLevelUpFlourish(oldLevel: number, newLevel: number): void {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes levelFade {
+      0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 0px rgba(255,255,255,0.8)); }
+      100% { transform: scale(0.5); opacity: 0; filter: drop-shadow(0 0 30px rgba(255,200,0,1)); }
+    }
+    @keyframes levelExplode {
+      0% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translate(0, 0) scale(0); opacity: 0; }
+    }
+    @keyframes goldGlide {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; filter: drop-shadow(0 0 30px rgba(255,200,0,1)); }
+      80% { transform: translate(var(--glide-x), var(--glide-y)) scale(0.9); opacity: 1; filter: drop-shadow(0 0 20px rgba(255,200,0,0.8)); }
+      100% { transform: translate(var(--glide-x), var(--glide-y)) scale(1); opacity: 1; filter: drop-shadow(0 0 10px rgba(255,200,0,0.6)); }
+    }
+    @keyframes progressShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .flourish-old-level {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 120px;
+      font-weight: 900;
+      color: #f0c040;
+      text-shadow: 0 0 30px rgba(240, 192, 64, 0.8);
+      animation: levelFade 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      pointer-events: none;
+      z-index: 5000;
+    }
+    .flourish-level-particle {
+      position: fixed;
+      pointer-events: none;
+      z-index: 5000;
+      font-size: 24px;
+    }
+    .flourish-new-level {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 120px;
+      font-weight: 900;
+      color: #ffd700;
+      text-shadow: 0 0 40px rgba(255, 215, 0, 1), 0 0 20px rgba(255, 200, 0, 0.6);
+      animation: goldGlide 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      pointer-events: none;
+      z-index: 5001;
+    }
+    .flourish-progress-bar {
+      animation: progressShake 0.6s ease-in-out 1.2s;
+    }
+  `;
+  document.head.appendChild(style);
+
+  const levelDisplay = document.getElementById('level-number-display');
+  const progressBar = document.getElementById('level-progress-bar-container');
+
+  if (!levelDisplay) return;
+
+  const rect = levelDisplay.getBoundingClientRect();
+  const targetX = rect.left + rect.width / 2;
+  const targetY = rect.top + rect.height / 2;
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+
+  const oldLevelEl = document.createElement('div');
+  oldLevelEl.className = 'flourish-old-level';
+  oldLevelEl.textContent = String(oldLevel);
+  document.body.appendChild(oldLevelEl);
+
+  const particles = ['✨', '⭐', '🌟', '💫', '🎉', '🎊'];
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const distance = 150;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    const particle = document.createElement('div');
+    particle.className = 'flourish-level-particle';
+    particle.textContent = particles[Math.floor(Math.random() * particles.length)];
+    particle.style.left = centerX + 'px';
+    particle.style.top = centerY + 'px';
+    particle.style.animation = `levelExplode 0.8s ease-out forwards`;
+    particle.style.setProperty('--tx', tx + 'px');
+    particle.style.setProperty('--ty', ty + 'px');
+    document.body.appendChild(particle);
+  }
+
+  setTimeout(() => {
+    const newLevelEl = document.createElement('div');
+    newLevelEl.className = 'flourish-new-level';
+    newLevelEl.textContent = String(newLevel);
+    newLevelEl.style.setProperty('--glide-x', (targetX - centerX) + 'px');
+    newLevelEl.style.setProperty('--glide-y', (targetY - centerY) + 'px');
+    document.body.appendChild(newLevelEl);
+
+    if (progressBar) {
+      progressBar.classList.add('flourish-progress-bar');
+    }
+
+    setTimeout(() => {
+      oldLevelEl.remove();
+      document.querySelectorAll('.flourish-level-particle').forEach(el => el.remove());
+      newLevelEl.remove();
+      style.remove();
+      if (progressBar) progressBar.classList.remove('flourish-progress-bar');
+    }, 2000);
+  }, 500);
+}
+
+function celebrateWin(leveledUp: boolean): void {
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes celebrationPop {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+    .celebration-particle {
+      position: fixed;
+      pointer-events: none;
+      font-size: 24px;
+      animation: celebrationPop 1.2s ease-out forwards;
+      z-index: 4999;
+    }
+  `;
+  document.head.appendChild(style);
+
+  const emojis = ['🎉', '✨', '⭐', '🌟', '💫', '🎊', '💥', '🎁'];
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+  const particleCount = 40;
+
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (i / particleCount) * Math.PI * 2;
+    const distance = 300 + Math.random() * 200;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+    const particle = document.createElement('div');
+    particle.className = 'celebration-particle';
+    particle.textContent = emoji;
+    particle.style.left = centerX + 'px';
+    particle.style.top = centerY + 'px';
+    particle.style.setProperty('--tx', tx + 'px');
+    particle.style.setProperty('--ty', ty + 'px');
+    document.body.appendChild(particle);
+
+    setTimeout(() => particle.remove(), 1200);
+  }
+
+  if (localStorage.getItem('soundEnabled') !== 'false') {
+    const victorySound = new Audio('assets/Sounds/win.mp3');
+    victorySound.volume = 0.7;
+    victorySound.play().catch(() => {});
+
+    if (leveledUp) {
+      setTimeout(() => {
+        const fanfareSound = new Audio('assets/Sounds/chime.mp3');
+        fanfareSound.volume = 0.8;
+        fanfareSound.play().catch(() => {});
+      }, 400);
+    }
+  }
+}
+
 function showWinScreen(): void {
   stopTimer();
   removeUrgencyEffects();
@@ -881,18 +1090,28 @@ function showWinScreen(): void {
 
   let leveledUp = false;
   let isMilestone = false;
+  let newLevelNum = currentLevel;
   if (newWins >= winsNeeded) {
-    const nextLevel = currentLevel + 1;
-    localStorage.setItem('candyLevel', String(nextLevel));
+    newLevelNum = currentLevel + 1;
+    localStorage.setItem('candyLevel', String(newLevelNum));
     localStorage.setItem(levelWinsKey, '0');
     leveledUp = true;
-    isMilestone = nextLevel % 5 === 0;
+    isMilestone = newLevelNum % 5 === 0;
   }
 
   const bonusCoins = isMilestone ? Math.floor(coinsEarned * 2) : 0;
   const totalCoinsEarned = coinsEarned + bonusCoins;
   localStorage.setItem('candyWinTarget', String(currentTarget + 50));
   localStorage.setItem('candyCoins', String(currentCoins + totalCoinsEarned));
+
+  if (leveledUp) {
+    localStorage.setItem('pendingLevelUp', JSON.stringify({
+      oldLevel: currentLevel,
+      newLevel: newLevelNum,
+      coinsEarned: totalCoinsEarned,
+      isMilestone: isMilestone
+    }));
+  }
 
   const screen = document.getElementById('win-screen');
   const scoreEl = document.getElementById('win-score');
@@ -905,6 +1124,7 @@ function showWinScreen(): void {
     else if (leveledUp) coinText += ` ⭐`;
     coinsEl.textContent = coinText;
   }
+  celebrateWin(leveledUp);
   screen.classList.remove('hidden');
 }
 
@@ -921,11 +1141,10 @@ function applyRandomBackground(): string {
   };
   let bgIdx = 0;
 
-  if (selectedId) {
-    bgIdx = bgMap[selectedId] !== undefined ? bgMap[selectedId] : Math.floor(Math.random() * (bgSys ? bgSys.count() : BACKGROUNDS.length));
-  } else {
-    bgIdx = Math.floor(Math.random() * (bgSys ? bgSys.count() : BACKGROUNDS.length));
+  if (selectedId && bgMap[selectedId] !== undefined) {
+    bgIdx = bgMap[selectedId];
   }
+  // else bgIdx stays 0 (bg_lush_meadow default)
 
   savedBgIndex = bgIdx;
   if (bgSys) {
@@ -993,7 +1212,8 @@ function startGame(): void {
   savedMoveCap = baseMoves + levelBonus + Math.floor(Math.random() * 6) - 3;
   moveCap = savedMoveCap;
   movesUsed = 0;
-  timeLeft = diff === 'easy' ? 120 : diff === 'hard' ? 60 : 90;
+  savedMaxTime = diff === 'easy' ? 120 : diff === 'hard' ? 60 : 90;
+  timeLeft = savedMaxTime;
   isAnimating = false;
   gameIconSet = pickIconSet();
   savedIconSet = gameIconSet;
@@ -1025,48 +1245,118 @@ function getScaledCoins(baseCoin: number, level: number): number {
 function showCountdown(): void {
   const style = document.createElement('style');
   style.textContent = `
-    @keyframes countdownPulse {
-      0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 10px rgba(122,240,176,0.6)); }
-      50% { transform: scale(1.15); opacity: 0.8; filter: drop-shadow(0 0 30px rgba(122,240,176,1)); }
-      100% { transform: scale(0.95); opacity: 0.6; filter: drop-shadow(0 0 20px rgba(122,240,176,0.8)); }
+    @keyframes cntNumIn {
+      0%   { transform: scale(0.12) translateY(15px); opacity: 0; filter: blur(12px); }
+      65%  { transform: scale(1.08) translateY(-4px); opacity: 1; filter: blur(0); }
+      100% { transform: scale(1)    translateY(0);    opacity: 1; filter: blur(0); }
     }
-    @keyframes countdownGO {
-      0% { transform: scale(0.5); opacity: 0; filter: drop-shadow(0 0 0px rgba(122,240,176,0)); }
-      50% { transform: scale(1.2); opacity: 1; filter: drop-shadow(0 0 40px rgba(122,240,176,1)); }
-      100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 20px rgba(122,240,176,0.8)); }
+    @keyframes cntNumOut {
+      0%   { transform: scale(1);   opacity: 1; filter: blur(0); }
+      100% { transform: scale(1.7); opacity: 0; filter: blur(8px); }
+    }
+    @keyframes cntGoIn {
+      0%   { transform: scale(0.06); opacity: 0; filter: blur(24px); }
+      52%  { transform: scale(1.22); opacity: 1; filter: blur(0); }
+      78%  { transform: scale(0.94); }
+      100% { transform: scale(1);    opacity: 1; }
+    }
+    @keyframes cntRing {
+      0%   { transform: translate(-50%,-50%) scale(0.1); opacity: 0.9; }
+      100% { transform: translate(-50%,-50%) scale(5.5); opacity: 0; }
     }
   `;
   document.head.appendChild(style);
 
-  const countdownEl = document.createElement('div');
-  countdownEl.id = 'countdown-overlay';
-  countdownEl.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:5000;backdrop-filter:blur(2px);font-family:Fredoka,sans-serif;';
+  const overlay = document.createElement('div');
+  overlay.id = 'countdown-overlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;
+    background:rgba(0,0,0,0);backdrop-filter:blur(0px);
+    display:flex;align-items:center;justify-content:center;
+    z-index:5000;font-family:Fredoka,sans-serif;
+    transition:background 0.4s ease,backdrop-filter 0.4s ease,opacity 0.45s ease;
+  `;
+  document.body.appendChild(overlay);
 
-  const text = document.createElement('div');
-  text.style.cssText = 'font-size:clamp(80px,20vmin,180px);font-weight:900;color:#7af0b0;text-shadow:-2px -2px 0 #4a9d52, 2px -2px 0 #4a9d52, -2px 2px 0 #4a9d52, 2px 2px 0 #4a9d52, 0 0 40px rgba(122,240,176,0.8);animation:countdownPulse 0.8s ease-in-out forwards;letter-spacing:4px;';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    overlay.style.background = 'rgba(0,0,0,0.88)';
+    overlay.style.backdropFilter = 'blur(3px)';
+  }));
 
-  countdownEl.appendChild(text);
-  document.body.appendChild(countdownEl);
+  const numEl = document.createElement('div');
+  numEl.style.cssText = `
+    font-size:clamp(110px,28vmin,220px);font-weight:900;
+    color:#7af0b0;position:relative;z-index:2;pointer-events:none;
+  `;
+  overlay.appendChild(numEl);
 
-  let count = 3;
-  const countLoop = setInterval(() => {
-    text.textContent = String(count);
-    text.style.animation = 'none';
-    setTimeout(() => {
-      text.style.animation = 'countdownPulse 0.8s ease-in-out forwards';
-    }, 10);
-    count--;
-    if (count < 0) {
-      clearInterval(countLoop);
-      text.textContent = 'GO!';
-      text.style.animation = 'countdownGO 0.6s ease-out forwards';
+  const counts = ['3','2','1'];
+  let idx = 0;
+
+  function doCount(val: string, isGo: boolean): void {
+    if (isGo) {
+      numEl.textContent = 'GO!';
+      numEl.style.color = '#ffd700';
+      numEl.style.textShadow = '0 0 80px rgba(255,215,0,1),0 0 40px rgba(255,165,0,0.8),-3px -3px 0 #7a5a00,3px 3px 0 #7a5a00';
+      numEl.style.animation = 'none';
+      void numEl.offsetWidth;
+      numEl.style.animation = 'cntGoIn 0.58s cubic-bezier(0.34,1.56,0.64,1) forwards';
+
+      overlay.style.transition = 'background 0.12s ease';
+      overlay.style.background = 'rgba(12,28,8,0.88)';
       setTimeout(() => {
-        countdownEl.remove();
-        style.remove();
-        startTimer();
-      }, 600);
+        overlay.style.transition = 'background 0.45s ease';
+        overlay.style.background = 'rgba(0,0,0,0.88)';
+      }, 120);
+
+      (['rgba(255,215,0,0.9)','rgba(255,165,0,0.65)','rgba(122,240,176,0.5)'] as string[]).forEach((color, i) => {
+        const ring = document.createElement('div');
+        ring.style.cssText = `
+          position:absolute;left:50%;top:50%;
+          width:200px;height:200px;border-radius:50%;
+          border:3px solid ${color};pointer-events:none;
+          transform:translate(-50%,-50%) scale(0.1);opacity:0;
+          animation:cntRing 0.95s ease-out ${i * 0.1}s both;
+        `;
+        overlay.appendChild(ring);
+      });
+
+      setTimeout(() => {
+        overlay.style.transition = 'opacity 0.5s ease';
+        overlay.style.opacity = '0';
+        setTimeout(() => { overlay.remove(); style.remove(); startTimer(); }, 500);
+      }, 720);
+
+    } else {
+      numEl.textContent = val;
+      numEl.style.color = '#7af0b0';
+      numEl.style.textShadow = '-2px -2px 0 #2d6e48,2px 2px 0 #2d6e48,0 0 55px rgba(122,240,176,0.85)';
+      numEl.style.animation = 'none';
+      void numEl.offsetWidth;
+      numEl.style.animation = 'cntNumIn 0.24s cubic-bezier(0.34,1.56,0.64,1) forwards';
+
+      setTimeout(() => {
+        overlay.style.transition = 'background 0.22s ease';
+        overlay.style.background = 'rgba(4,18,8,0.88)';
+        setTimeout(() => {
+          overlay.style.transition = 'background 0.38s ease';
+          overlay.style.background = 'rgba(0,0,0,0.88)';
+        }, 220);
+      }, 120);
+
+      setTimeout(() => {
+        numEl.style.animation = 'none';
+        void numEl.offsetWidth;
+        numEl.style.animation = 'cntNumOut 0.19s ease-in forwards';
+        setTimeout(() => {
+          idx++;
+          doCount(idx < counts.length ? counts[idx] : 'GO!', idx >= counts.length);
+        }, 190);
+      }, 560);
     }
-  }, 800);
+  }
+
+  setTimeout(() => doCount(counts[0], false), 360);
 }
 
 function resetGame(): void {
@@ -1077,7 +1367,7 @@ function resetGame(): void {
   applyBackground(savedBackground);
   moveCap = savedMoveCap;
   movesUsed = 0;
-  timeLeft = 40;
+  timeLeft = savedMaxTime;
   isAnimating = false;
   gameIconSet = savedIconSet;
   gameGrid = savedGrid.map(row => [...row]);
@@ -1088,7 +1378,7 @@ function resetGame(): void {
   updateMovesDisplay();
   updateTimerDisplay();
   renderBoosterBar();
-  startTimer();
+  showCountdown();
 }
 
 function goToMenu(): void {
