@@ -417,7 +417,7 @@ function activateBooster(id: string): void {
   inv[id]--;
   localStorage.setItem('candyInventory', JSON.stringify(inv));
   switch (id) {
-    case 'color-blast': moveCap += 15; updateMovesDisplay(); break;
+    case 'color-blast': moveCap += 5; updateMovesDisplay(); break;
   }
   renderBoosterBar();
 }
@@ -1389,6 +1389,13 @@ function celebrateWin(leveledUp: boolean): void {
 
 function showWinScreen(): void {
   stopTimer();
+  const diff = new URLSearchParams(window.location.search).get('difficulty') || 'medium';
+  const elapsed = savedMaxTime - timeLeft;
+  const bestKey = `candyBestTime_${diff}`;
+  const prevBest = parseInt(localStorage.getItem(bestKey) || '');
+  if (isNaN(prevBest) || elapsed < prevBest) {
+    localStorage.setItem(bestKey, String(elapsed));
+  }
   removeUrgencyEffects();
   const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
   const currentTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');
