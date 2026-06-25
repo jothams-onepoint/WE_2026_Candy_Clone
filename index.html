@@ -7,6 +7,24 @@
   <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
+  <style>
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      z-index: 10000;
+      display: none;
+    }
+    #loading-overlay.active {
+      display: block;
+    }
+  </style>
+  <div id="loading-overlay" class="active"></div>
+  <script>
+    if (new URLSearchParams(window.location.search).has('autostart')) {
+      document.getElementById('loading-overlay').classList.add('active');
+    }
+  </script>
   <canvas id="bg-canvas"></canvas>
 
   <!-- Main Menu -->

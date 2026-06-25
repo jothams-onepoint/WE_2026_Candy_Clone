@@ -963,10 +963,10 @@ function startGame(): void {
     medium: 1500,
     hard: 2500,
   };
-  winTarget = (basePoints[diff] || basePoints.medium) + (currentLevel - 1) * 500;
+  winTarget = (basePoints[diff] || basePoints.medium) + (currentLevel - 1) * 250;
 
   savedBackground = applyRandomBackground();
-  savedMoveCap = Math.floor(Math.random() * 11) + 15;
+  savedMoveCap = Math.floor(Math.random() * 16) + 18;
   moveCap = savedMoveCap;
   movesUsed = 0;
   timeLeft = diff === 'easy' ? 120 : diff === 'hard' ? 60 : 90;
@@ -1113,6 +1113,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('objective-screen')?.classList.remove('hidden');
     startGame();
     showObjectiveScreen(difficulty);
+    requestAnimationFrame(() => {
+      document.getElementById('loading-overlay')?.classList.remove('active');
+    });
+  } else {
+    document.getElementById('loading-overlay')?.classList.remove('active');
   }
 
   document.getElementById('menu-play')?.addEventListener('click', () => {
