@@ -1,6 +1,11 @@
-type IconName = 'ant' | 'blue_flower' | 'grass' | 'potted_plant' | 'red_flower' | 'shovel';
+interface Window {
+  BgSystem?: { init(): void; start(index: number): void };
+}
+
+type IconName = 'ant' | 'blue_flower' | 'grass' | 'potted_plant' | 'red_flower' | 'shovel' | 'bomb_special' | 'shears_special';
 
 const ICONS: IconName[] = ['ant', 'blue_flower', 'grass', 'potted_plant', 'red_flower', 'shovel'];
+const SPECIAL_ICONS: IconName[] = ['bomb_special', 'shears_special'];
 const ICON_SETS = ['tile_icons_red', 'Tile_icons_blue'] as const;
 const BACKGROUNDS = [
   'assets/backgrounds/bg_autumn_garden.png',
@@ -568,7 +573,11 @@ function generateGrid(): (IconName | null)[][] {
         blocked.add(grid[row - 1][col] as IconName);
       }
       const valid = ICONS.filter(icon => !blocked.has(icon));
-      grid[row][col] = valid[Math.floor(Math.random() * valid.length)];
+      if (Math.random() < 0.02) {
+        grid[row][col] = SPECIAL_ICONS[Math.floor(Math.random() * SPECIAL_ICONS.length)];
+      } else {
+        grid[row][col] = valid[Math.floor(Math.random() * valid.length)];
+      }
     }
   }
   return grid;
@@ -603,14 +612,20 @@ function renderGrid(newCells?: Set<string>): void {
 
       const icon = gameGrid[row][col] as IconName;
       const isGold = goldGrid[row][col];
+      const isSpecial = icon === 'bomb_special' || icon === 'shears_special';
       const cellSet = isGold ? 'Tile_icons_gold' : gameIconSet;
 
       cell.dataset.icon = icon;
       if (isGold) cell.dataset.gold = 'true';
+      if (isSpecial) cell.classList.add('special-tile');
       if (newCells?.has(`${row},${col}`)) cell.classList.add('tile-new');
 
       const img = document.createElement('img');
-      img.src = `assets/tile icons/${cellSet}/${icon}.png`;
+      if (isSpecial) {
+        img.src = `assets/tile icons/special_tiles/${icon === 'bomb_special' ? 'bomb icon.png' : 'shears icon.png'}`;
+      } else {
+        img.src = `assets/tile icons/${cellSet}/${icon}.png`;
+      }
       img.alt = icon;
       img.draggable = false;
 
@@ -629,12 +644,18 @@ function updateCellDOM(row: number, col: number): void {
   if (!cell) return;
   const icon = gameGrid[row][col];
   const isGold = goldGrid[row][col];
+  const isSpecial = icon === 'bomb_special' || icon === 'shears_special';
   const cellSet = isGold ? 'Tile_icons_gold' : gameIconSet;
   const img = cell.querySelector('img') as HTMLImageElement;
-  img.src = `assets/tile icons/${cellSet}/${icon}.png`;
-  img.alt = icon;
-  cell.dataset.icon = icon;
+  if (isSpecial) {
+    img.src = `assets/tile icons/special_tiles/${icon === 'bomb_special' ? 'bomb icon.png' : 'shears icon.png'}`;
+  } else {
+    img.src = `assets/tile icons/${cellSet}/${icon}.png`;
+  }
+  img.alt = icon ?? '';
+  cell.dataset.icon = icon ?? '';
   if (isGold) cell.dataset.gold = 'true'; else delete cell.dataset.gold;
+  if (isSpecial) cell.classList.add('special-tile'); else cell.classList.remove('special-tile');
 }
 
 function updateScoreDisplay(): void {
@@ -770,7 +791,7 @@ function findAllMatchGroups(): MatchGroup[] {
       const icon = gameGrid[row][col];
       let len = 1;
       while (col + len < GRID_SIZE && gameGrid[row][col + len] === icon) len++;
-      if (icon !== null && len >= 3) {
+      if (icon !== null && len >= 3 && icon !== 'bomb_special' && icon !== 'shears_special') {
         const cells: { row: number; col: number }[] = [];
         for (let i = 0; i < len; i++) cells.push({ row, col: col + i });
         groups.push({ cells, size: len });
@@ -785,7 +806,7 @@ function findAllMatchGroups(): MatchGroup[] {
       const icon = gameGrid[row][col];
       let len = 1;
       while (row + len < GRID_SIZE && gameGrid[row + len][col] === icon) len++;
-      if (icon !== null && len >= 3) {
+      if (icon !== null && len >= 3 && icon !== 'bomb_special' && icon !== 'shears_special') {
         const cells: { row: number; col: number }[] = [];
         for (let i = 0; i < len; i++) cells.push({ row: row + i, col });
         groups.push({ cells, size: len });
@@ -799,7 +820,7 @@ function findAllMatchGroups(): MatchGroup[] {
 
 function hasMatchAt(row: number, col: number): boolean {
   const icon = gameGrid[row][col];
-  if (icon === null) return false;
+  if (icon === null || icon === 'bomb_special' || icon === 'shears_special') return false;
 
   let hCount = 1;
   for (let c = col - 1; c >= 0 && gameGrid[row][c] === icon; c--) hCount++;
@@ -820,6 +841,7 @@ function showBreakAnimation(row: number, col: number): void {
   const cell = getCellElement(row, col);
   if (!cell) return;
   const icon = gameGrid[row][col];
+  if (icon === 'bomb_special' || icon === 'shears_special') { cell.classList.add('breaking'); return; }
   const isGold = goldGrid[row][col];
   const animDir = isGold ? 'gold' : getAnimDir();
   const img = cell.querySelector('img') as HTMLImageElement;
@@ -1026,6 +1048,181 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+async function fireBombSpecialBlast(row: number, col: number): Promise<void> {
+  if (gameGrid[row]?.[col] !== 'bomb_special') return;
+
+  const cellEl = getCellElement(row, col);
+  if (cellEl) {
+    const rect = cellEl.getBoundingClientRect();
+    showBombBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  }
+  if (isSoundOn()) { crunchSound.currentTime = 0.8; crunchSound.play().catch(() => {}); }
+
+  const blast = [
+    { row,     col       },
+    { row,     col: col + 1 },
+    { row: row - 1, col       },
+    { row: row - 1, col: col + 1 },
+  ].filter(({ row: r, col: c }) => r >= 0 && c < GRID_SIZE && isCellActive(r, c));
+
+  let blastScore = 0;
+  blast.forEach(({ row: r, col: c }) => { blastScore += goldGrid[r][c] ? 600 : 200; });
+  points += blastScore;
+  showScoreFlash(blast, blastScore);
+  updateScoreDisplay();
+
+  blast.forEach(({ row: r, col: c }) => showBreakAnimation(r, c));
+  await sleep(520);
+
+  const removedSet = new Set<string>(blast.map(({ row: r, col: c }) => `${r},${c}`));
+  const newCells = new Set<string>();
+  for (let c = 0; c < GRID_SIZE; c++) {
+    const activeRows: number[] = [];
+    for (let r = 0; r < GRID_SIZE; r++) { if (isCellActive(r, c)) activeRows.push(r); }
+    if (activeRows.length === 0) continue;
+    const keepIcons: (IconName | null)[] = [], keepGolds: boolean[] = [];
+    for (const r of activeRows) {
+      if (!removedSet.has(`${r},${c}`)) { keepIcons.push(gameGrid[r][c]); keepGolds.push(goldGrid[r][c]); }
+    }
+    const newCount = activeRows.length - keepIcons.length;
+    const newIcons: IconName[] = [], newGolds: boolean[] = [];
+    for (let i = 0; i < newCount; i++) {
+      newIcons.push(ICONS[Math.floor(Math.random() * ICONS.length)]);
+      newGolds.push(Math.random() < 0.01);
+      newCells.add(`${activeRows[i]},${c}`);
+    }
+    const allIcons = [...newIcons, ...keepIcons];
+    const allGolds = [...newGolds, ...keepGolds];
+    for (let i = 0; i < activeRows.length; i++) {
+      gameGrid[activeRows[i]][c] = allIcons[i] as IconName;
+      goldGrid[activeRows[i]][c] = allGolds[i];
+    }
+  }
+  await sleep(100);
+  renderGrid(newCells);
+  await sleep(320);
+}
+
+function flashGoldBackground(): void {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(255,200,0,0.38);pointer-events:none;z-index:200;opacity:0;transition:opacity 60ms ease;';
+  document.body.appendChild(el);
+  requestAnimationFrame(() => {
+    el.style.opacity = '1';
+    setTimeout(() => {
+      el.style.transition = 'opacity 300ms ease';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 310);
+    }, 100);
+  });
+}
+
+function getShearDirection(row: number, col: number): 'up' | 'down' | 'left' | 'right' {
+  let up = 0, down = 0, left = 0, right = 0;
+  for (let r = row - 1; r >= 0; r--) if (isCellActive(r, col)) up++;
+  for (let r = row + 1; r < GRID_SIZE; r++) if (isCellActive(r, col)) down++;
+  for (let c = col - 1; c >= 0; c--) if (isCellActive(row, c)) left++;
+  for (let c = col + 1; c < GRID_SIZE; c++) if (isCellActive(row, c)) right++;
+  const max = Math.max(up, down, left, right);
+  if (up === max) return 'up';
+  if (down === max) return 'down';
+  if (left === max) return 'left';
+  return 'right';
+}
+
+async function fireShearsBlade(row: number, col: number): Promise<void> {
+  if (gameGrid[row]?.[col] !== 'shears_special') return;
+
+  const dir = getShearDirection(row, col);
+
+  // Collect all tiles to clear: shears tile + everything in the chosen direction
+  const toRemove: { row: number; col: number }[] = [{ row, col }];
+  if (dir === 'up')    for (let r = row - 1; r >= 0; r--)         { if (isCellActive(r, col))  toRemove.push({ row: r, col }); }
+  if (dir === 'down')  for (let r = row + 1; r < GRID_SIZE; r++)  { if (isCellActive(r, col))  toRemove.push({ row: r, col }); }
+  if (dir === 'left')  for (let c = col - 1; c >= 0; c--)         { if (isCellActive(row, c))  toRemove.push({ row, col: c }); }
+  if (dir === 'right') for (let c = col + 1; c < GRID_SIZE; c++)  { if (isCellActive(row, c))  toRemove.push({ row, col: c }); }
+
+  const cellEl = getCellElement(row, col);
+  if (!cellEl) return;
+  const rect = cellEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  // Hide the tile icon 50ms before the blade starts moving
+  const tileIcon = cellEl.querySelector('img') as HTMLImageElement | null;
+  if (tileIcon) tileIcon.style.visibility = 'hidden';
+  await sleep(50);
+
+  // Slide a transparent shears image out from the tile
+  const img = document.createElement('img');
+  img.src = 'assets/tile icons/special_tiles/shears icon.png';
+  const rotationDeg = dir === 'right' ? 0 : dir === 'left' ? 180 : dir === 'up' ? -90 : 90;
+  img.style.cssText = `position:fixed;pointer-events:none;z-index:150;width:65px;height:65px;object-fit:contain;left:${cx}px;top:${cy}px;transform:translate(-50%,-50%) rotate(${rotationDeg}deg);`;
+  document.body.appendChild(img);
+
+  // Fade the purple tile background away as the image leaves
+  cellEl.classList.add('shears-dissolve');
+
+  // Off-screen target
+  const endX = dir === 'left' ? -90 : dir === 'right' ? window.innerWidth + 90 : cx;
+  const endY = dir === 'up'   ? -90 : dir === 'down'  ? window.innerHeight + 90 : cy;
+  const dist = Math.abs(endX - cx) + Math.abs(endY - cy);
+  const DURATION = Math.max(280, dist / 1.6); // ~1600 px/s
+
+  const slideStart = performance.now();
+  await new Promise<void>(resolve => {
+    function frame(now: number): void {
+      const t = Math.min((now - slideStart) / DURATION, 1);
+      img.style.left = `${cx + (endX - cx) * t}px`;
+      img.style.top  = `${cy + (endY - cy) * t}px`;
+      if (t < 1) requestAnimationFrame(frame);
+      else { img.remove(); resolve(); }
+    }
+    requestAnimationFrame(frame);
+  });
+
+  if (isSoundOn()) { crunchSound.currentTime = 0.8; crunchSound.play().catch(() => {}); }
+
+  // Score all cleared tiles
+  let totalScore = 0;
+  toRemove.forEach(({ row: r, col: c }) => { totalScore += goldGrid[r][c] ? 600 : 200; });
+  points += totalScore;
+  showScoreFlash(toRemove, totalScore);
+  updateScoreDisplay();
+
+  toRemove.forEach(({ row: r, col: c }) => showBreakAnimation(r, c));
+  await sleep(520);
+
+  // Gravity
+  const removedSet = new Set<string>(toRemove.map(({ row: r, col: c }) => `${r},${c}`));
+  const newCells = new Set<string>();
+  for (let c = 0; c < GRID_SIZE; c++) {
+    const activeRows: number[] = [];
+    for (let r = 0; r < GRID_SIZE; r++) { if (isCellActive(r, c)) activeRows.push(r); }
+    if (activeRows.length === 0) continue;
+    const keepIcons: (IconName | null)[] = [], keepGolds: boolean[] = [];
+    for (const r of activeRows) {
+      if (!removedSet.has(`${r},${c}`)) { keepIcons.push(gameGrid[r][c]); keepGolds.push(goldGrid[r][c]); }
+    }
+    const newCount = activeRows.length - keepIcons.length;
+    const newIcons: IconName[] = [], newGolds: boolean[] = [];
+    for (let i = 0; i < newCount; i++) {
+      newIcons.push(ICONS[Math.floor(Math.random() * ICONS.length)]);
+      newGolds.push(Math.random() < 0.01);
+      newCells.add(`${activeRows[i]},${c}`);
+    }
+    const allIcons = [...newIcons, ...keepIcons];
+    const allGolds = [...newGolds, ...keepGolds];
+    for (let i = 0; i < activeRows.length; i++) {
+      gameGrid[activeRows[i]][c] = allIcons[i] as IconName;
+      goldGrid[activeRows[i]][c] = allGolds[i];
+    }
+  }
+  await sleep(100);
+  renderGrid(newCells);
+  await sleep(320);
+}
+
 async function processMatches(depth = 0): Promise<void> {
   if (depth > 20) return;
 
@@ -1035,16 +1232,45 @@ async function processMatches(depth = 0): Promise<void> {
   const matchedSet = new Set<string>();
   groups.forEach(g => g.cells.forEach(c => matchedSet.add(`${c.row},${c.col}`)));
 
+  // Detect special tiles adjacent to this match
+  const triggeredBombKeys = new Set<string>();
+  const triggeredShearsKeys = new Set<string>();
+  for (const key of matchedSet) {
+    const [r, c] = key.split(',').map(Number);
+    for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]] as [number,number][]) {
+      const nr = r + dr, nc = c + dc;
+      const bkey = `${nr},${nc}`;
+      if (!matchedSet.has(bkey)) {
+        if (gameGrid[nr]?.[nc] === 'bomb_special')   triggeredBombKeys.add(bkey);
+        if (gameGrid[nr]?.[nc] === 'shears_special') triggeredShearsKeys.add(bkey);
+      }
+    }
+  }
+  const calcPostGravity = (keys: Set<string>) => [...keys].map(bkey => {
+    const [br, bc] = bkey.split(',').map(Number);
+    let fall = 0;
+    for (const key of matchedSet) {
+      const [r, c] = key.split(',').map(Number);
+      if (c === bc && r > br && isCellActive(r, bc)) fall++;
+    }
+    return { row: br + fall, col: bc };
+  });
+  const postGravityBombs  = calcPostGravity(triggeredBombKeys);
+  const postGravityShears = calcPostGravity(triggeredShearsKeys);
+
   let playChime = false;
+  let anyGold = false;
   groups.forEach(group => {
     if (group.size >= 5) playChime = true;
     const hasGold = group.cells.some(c => goldGrid[c.row][c.col]);
+    if (hasGold) anyGold = true;
     const baseScore = group.size >= 5 ? 200 : group.size === 4 ? 100 : 50;
     const scored = hasGold ? baseScore * 2 : baseScore;
     points += scored;
     showScoreFlash(group.cells, scored);
   });
 
+  if (anyGold) flashGoldBackground();
   updateScoreDisplay();
 
   if (points >= winTarget) {
@@ -1113,7 +1339,24 @@ async function processMatches(depth = 0): Promise<void> {
   }
 
   renderGrid(newCells);
+
+  // Flash adjacent bomb_special tiles red while tiles fall
+  for (const { row, col } of postGravityBombs) {
+    getCellElement(row, col)?.classList.add('bomb-special-flash');
+  }
+
   await sleep(320);
+
+  // Explode each triggered bomb after the fall settles
+  for (const { row, col } of postGravityBombs) {
+    getCellElement(row, col)?.classList.remove('bomb-special-flash');
+    await fireBombSpecialBlast(row, col);
+  }
+
+  // Slide each triggered shears blade after bombs resolve
+  for (const { row, col } of postGravityShears) {
+    await fireShearsBlade(row, col);
+  }
 
   await processMatches(depth + 1);
 }
