@@ -2,6 +2,12 @@
 const BASE = '../assets/animations/menu animations/';
 const clickSound = new Audio('../assets/Sounds/pop.mp3');
 
+function getWinsNeeded(level) {
+  if (level <= 2) return 3;
+  if (level <= 4) return 4;
+  return 5;
+}
+
 function playClickSound() {
   if (localStorage.getItem('soundEnabled') === 'false') return;
   clickSound.currentTime = 0;
@@ -52,7 +58,7 @@ function updateLevelDisplay() {
   const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
   const levelWinsKey = `levelWins_${currentLevel}`;
   const currentLevelWins = parseInt(localStorage.getItem(levelWinsKey) || '0');
-  const winsPerLevel = 3;
+  const winsPerLevel = getWinsNeeded(currentLevel);
 
   const levelDisplay = document.getElementById('level-number-display');
   if (levelDisplay) levelDisplay.textContent = String(currentLevel);
@@ -68,11 +74,11 @@ function updateLevelPopup() {
   const currentLevel = parseInt(localStorage.getItem('candyLevel') || '1');
   const levelWinsKey = `levelWins_${currentLevel}`;
   const currentLevelWins = parseInt(localStorage.getItem(levelWinsKey) || '0');
-  const winsPerLevel = 3;
+  const winsPerLevel = getWinsNeeded(currentLevel);
 
   document.getElementById('level-popup-number').textContent = String(currentLevel);
   document.getElementById('level-popup-wins').textContent = String(currentLevelWins);
-  document.getElementById('level-popup-next').textContent = String(currentLevel + 1);
+  document.getElementById('level-popup-next').textContent = String(winsPerLevel);
 
   const progressPercent = Math.min(100, (currentLevelWins / winsPerLevel) * 100);
   const progressBar = document.getElementById('level-popup-progress');

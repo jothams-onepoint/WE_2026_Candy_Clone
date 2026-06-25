@@ -869,25 +869,42 @@ function showWinScreen(): void {
   const currentTarget = parseInt(localStorage.getItem('candyWinTarget') || '500');
   const currentCoins = parseInt(localStorage.getItem('candyCoins') || '0');
 
-  const coinsEarned = Math.floor(points / 10);
+  const baseCoinReward = [0, 75, 150, 300][Math.floor(currentLevel / 5)] || 300;
+  const coinsEarned = getScaledCoins(baseCoinReward, currentLevel);
 
   const levelWinsKey = `levelWins_${currentLevel}`;
   const currentLevelWins = parseInt(localStorage.getItem(levelWinsKey) || '0');
   const newWins = currentLevelWins + 1;
+  const winsNeeded = getWinsNeeded(currentLevel);
+
   localStorage.setItem(levelWinsKey, String(newWins));
 
-  if (newWins >= 3) {
-    localStorage.setItem('candyLevel', String(currentLevel + 1));
+  let leveledUp = false;
+  let isMilestone = false;
+  if (newWins >= winsNeeded) {
+    const nextLevel = currentLevel + 1;
+    localStorage.setItem('candyLevel', String(nextLevel));
+    localStorage.setItem(levelWinsKey, '0');
+    leveledUp = true;
+    isMilestone = nextLevel % 5 === 0;
   }
+
+  const bonusCoins = isMilestone ? Math.floor(coinsEarned * 2) : 0;
+  const totalCoinsEarned = coinsEarned + bonusCoins;
   localStorage.setItem('candyWinTarget', String(currentTarget + 50));
-  localStorage.setItem('candyCoins', String(currentCoins + coinsEarned));
+  localStorage.setItem('candyCoins', String(currentCoins + totalCoinsEarned));
 
   const screen = document.getElementById('win-screen');
   const scoreEl = document.getElementById('win-score');
   const coinsEl = document.getElementById('win-coins');
   if (!screen || !scoreEl) return;
   scoreEl.textContent = String(points);
-  if (coinsEl) coinsEl.textContent = String(coinsEarned);
+  if (coinsEl) {
+    let coinText = String(totalCoinsEarned);
+    if (isMilestone) coinText += ` 🎉 (MILESTONE BONUS!)`;
+    else if (leveledUp) coinText += ` ⭐`;
+    coinsEl.textContent = coinText;
+  }
   screen.classList.remove('hidden');
 }
 
@@ -990,7 +1007,40 @@ function startGame(): void {
   updateMovesDisplay();
   updateTimerDisplay();
   renderBoosterBar();
-  startTimer();
+}
+
+function getWinsNeeded(level: number): number {
+  if (level <= 2) return 3;
+  if (level <= 4) return 4;
+  return 5;
+}
+
+function getScaledCoins(baseCoin: number, level: number): number {
+  let multiplier = 1;
+  if (level >= 20) multiplier = 3;
+  else if (level >= 10) multiplier = 2;
+  return Math.floor(baseCoin * multiplier);
+}
+
+function showCountdown(): void {
+  const countdownEl = document.createElement('div');
+  countdownEl.id = 'countdown-overlay';
+  countdownEl.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:5000;font-size:clamp(60px,15vmin,120px);font-weight:900;color:#7af0b0;text-shadow:0 0 20px rgba(122,240,176,0.8);font-family:Fredoka,sans-serif;';
+  document.body.appendChild(countdownEl);
+
+  let count = 3;
+  const countLoop = setInterval(() => {
+    countdownEl.textContent = String(count);
+    count--;
+    if (count < 0) {
+      clearInterval(countLoop);
+      countdownEl.textContent = 'GO!';
+      setTimeout(() => {
+        countdownEl.remove();
+        startTimer();
+      }, 400);
+    }
+  }, 600);
 }
 
 function resetGame(): void {
@@ -1138,6 +1188,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('objective-start-btn')?.addEventListener('click', () => {
     document.getElementById('objective-screen')?.classList.add('hidden');
     document.getElementById('app')?.classList.remove('hidden');
+    showCountdown();
   });
 
   document.getElementById('retry-btn')?.addEventListener('click', resetGame);
