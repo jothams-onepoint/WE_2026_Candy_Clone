@@ -2,6 +2,12 @@
 const BASE = '../assets/animations/menu animations/';
 const clickSound = new Audio('../assets/Sounds/pop.mp3');
 
+function formatBestTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s.toString().padStart(2, '0')}s` : `${s}s`;
+}
+
 function showLevelUpFlourish(oldLevel, newLevel, coinsEarned, isMilestone) {
   const style = document.createElement('style');
   style.textContent = `
@@ -620,6 +626,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // New animated play button
   document.getElementById('btn-play')?.addEventListener('click', () => {
     playClickSound();
+    ['easy', 'medium', 'hard'].forEach(diff => {
+      const stored = localStorage.getItem(`candyBestTime_${diff}`);
+      const el = document.querySelector(`#best-${diff} .best-value`);
+      if (el) el.textContent = stored ? formatBestTime(parseInt(stored)) : '—';
+    });
     openPopup('popup-difficulty');
   });
   setupButton('btn-settings', BASE + 'settings_idle.png', null,                            () => openPopup('popup-settings'));
